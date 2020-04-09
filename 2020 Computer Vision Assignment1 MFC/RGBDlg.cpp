@@ -71,6 +71,8 @@ BEGIN_MESSAGE_MAP(CRGBDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_Red_Btn, &CRGBDlg::OnBnClickedRedBtn)
 	ON_BN_CLICKED(IDC_Green_Btn, &CRGBDlg::OnBnClickedGreenBtn)
 	ON_BN_CLICKED(IDC_Blue_Btn, &CRGBDlg::OnBnClickedBlueBtn)
+	ON_BN_CLICKED(IDC_Gray_Btn, &CRGBDlg::OnBnClickedGrayBtn)
+	ON_BN_CLICKED(IDC_Btn_Otsu, &CRGBDlg::OnBnClickedBtnOtsu)
 END_MESSAGE_MAP()
 
 
@@ -160,7 +162,7 @@ HCURSOR CRGBDlg::OnQueryDragIcon()
 }
 
 
-
+// Load 버튼 클릭 시
 void CRGBDlg::OnBnClickedImgSearch()
 {
 	static TCHAR BASED_CODE szFilter[] = _T("이미지 파일(*.BMP, *.GIF, *.JPG) | *.BMP;*.GIF;*.JPG;*.bmp;*.jpg;*.gif |모든파일(*.*)|*.*||");
@@ -232,10 +234,12 @@ void CRGBDlg::DisplayImage(Mat targetMat, int channel)
 	ReleaseDC(pDC);
 }
 
+// save 버튼 클릭 시, copy.jpg로 저장하는 부분
 void CRGBDlg::OnBnClickedImgSave()
 {
 	imwrite("copy.jpg", img);
 	MessageBox(_T("이미지 저장 완료!"), _T(""));
+	//imshow();
 }
 
 
@@ -244,6 +248,7 @@ void CRGBDlg::OnBnClickedRedBtn()
 	Mat img_copy = img.clone();
 	chageColor(img, img_copy, 1);
 	DisplayImage(img_copy, 3);
+	img = img_copy.clone();
 }
 
 
@@ -252,6 +257,7 @@ void CRGBDlg::OnBnClickedGreenBtn()
 	Mat img_copy = img.clone();
 	chageColor(img, img_copy, 2);
 	DisplayImage(img_copy, 3);
+	img = img_copy.clone();
 }
 
 
@@ -260,6 +266,68 @@ void CRGBDlg::OnBnClickedBlueBtn()
 	Mat img_copy = img.clone();
 	chageColor(img, img_copy, 3);
 	DisplayImage(img_copy, 3);
+	img = img_copy.clone();
+}
+
+void CRGBDlg::OnBnClickedGrayBtn()
+{
+	Mat img_copy = img.clone();
+	cvtColor(img_copy, img_copy, CV_BGR2GRAY);
+	DisplayImage(img_copy, 3);
+	img = img_copy.clone();
+}
+
+
+void CRGBDlg::OnBnClickedBtnOtsu()
+{
+	Mat img_copy = img.clone();
+	int nRows = img_copy.rows;
+	int nCols = img_copy.cols;
+	Mat histogram;
+	const int* channel_numbers = { 0 };
+	float channel_range[] = { 0.0, 255.0 };
+	const float* channel_ranges = channel_range;
+	int number_bins = 255;
+	calcHist(&img_copy, 1, channel_numbers, Mat(), histogram, 1, &number_bins, &channel_ranges);
+	float * n = histogram.ptr<float>(0);
+	n[255] = 0.0;
+
+	double p[256] = { 0.0 };
+	double w0[256] = { 0.0 };
+	double w1[256] = { 0.0 };
+	double m0[256] = { 0.0 };
+	double m1[256] = { 0.0 };
+	double sum_ipi[256] = { 0.0 };
+	double mt = 0.0;
+	double sq = 0;
+	double sol_sq = 0.0;
+	int T = 0;
+
+	for (int i = 1; i <= 255; i++) {
+		p[i] = n[i] / 262144;
+		mt += (i*p[i]);
+		w0[i] = w0[i - 1] + p[i];
+		w1[i] = 1 - w0[i];
+		sum_ipi[i] = sum_ipi[i - 1] + (i*p[i]);
+	}
+
+	for (int i = 1; i <= 255; i++) {
+		m0[i] = (sum_ipi[i] / w0[i]);
+		m1[i] = ((sum_ipi[255] - sum_ipi[i]) / w1[i]);
+	}
+
+	for (int i = 1; i <= 255; i++) {
+		sq = (w0[i])*(1 - w0[i])*((m0[i] - m1[i])*(m0[i] - m1[i]));
+		if (sq > sol_sq) {
+			sol_sq = sq;
+			T = i;
+		}
+	}
+
+	Mat binary;
+	threshold(img_copy, binary, T, 255, CV_THRESH_BINARY);
+	DisplayImage(binary, 3);
+	img = binary.clone();
 }
 
 void chageColor(Mat img, Mat &copy, int i)
@@ -320,4 +388,9 @@ void chageColor(Mat img, Mat &copy, int i)
 	}
 
 }
+
+
+
+
+
 

@@ -45,4 +45,8 @@ public:
 	afx_msg void OnBnClickedRedBtn();
 	afx_msg void OnBnClickedGreenBtn();
 	afx_msg void OnBnClickedBlueBtn();
+	afx_msg void OnBnClickedButton1();
+	afx_msg void OnBnClickedButton2();
+	afx_msg void OnBnClickedGrayBtn();
+	afx_msg void OnBnClickedBtnOtsu();
 };
