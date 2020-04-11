@@ -10,7 +10,8 @@
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
-void chageColor(Mat img, Mat &copy, int i);
+void changeColor(Mat img, Mat &copy, int i);
+void Otsu(Mat& img_copy);
 
 
 // 응용 프로그램 정보에 사용되는 CAboutDlg 대화 상자입니다.
@@ -67,12 +68,14 @@ BEGIN_MESSAGE_MAP(CRGBDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_Img_Search, &CRGBDlg::OnBnClickedImgSearch)
-	ON_BN_CLICKED(IDC_Img_Save, &CRGBDlg::OnBnClickedImgSave)
+	ON_BN_CLICKED(IDC_Img_Save, &CRGBDlg::OnBnClickedImgSave)	
+	/* 원본 버튼 코드들
 	ON_BN_CLICKED(IDC_Red_Btn, &CRGBDlg::OnBnClickedRedBtn)
 	ON_BN_CLICKED(IDC_Green_Btn, &CRGBDlg::OnBnClickedGreenBtn)
 	ON_BN_CLICKED(IDC_Blue_Btn, &CRGBDlg::OnBnClickedBlueBtn)
 	ON_BN_CLICKED(IDC_Gray_Btn, &CRGBDlg::OnBnClickedGrayBtn)
 	ON_BN_CLICKED(IDC_Btn_Otsu, &CRGBDlg::OnBnClickedBtnOtsu)
+	*/
 END_MESSAGE_MAP()
 
 
@@ -238,20 +241,20 @@ void CRGBDlg::DisplayImage(Mat targetMat, int channel)
 // save 버튼 클릭 시, 색변환 & 저장하는 부분 / // 색 변경 => (X) Mat img_copy_r, img_copy_g, img_copy_b, img_copy_rg, img_copy_gg, img_copy_bg, img_copy_rgo, img_copy_ggo, img_copy_bgo = img.clone();
 void CRGBDlg::OnBnClickedImgSave()
 {
-	//changeColor & imwrite
+	//1. changeColor & imwrite
 	//red
 	Mat img_copy_r = img.clone(); //Mat img_copy_r; 이렇게 선언만 하는 건 왜 안됨.. cvtColor에서는 선언만 하는거 가능한데.. &주소 때문..?
-	chageColor(img, img_copy_r, 1);
+	changeColor(img, img_copy_r, 1);
 	imwrite("copy_r.jpg", img_copy_r);
 
 	//green
 	Mat img_copy_g = img.clone();
-	chageColor(img, img_copy_g, 2);
+	changeColor(img, img_copy_g, 2);
 	imwrite("copy_g.jpg", img_copy_g);
 
 	//blue
 	Mat img_copy_b = img.clone();
-	chageColor(img, img_copy_b, 3);
+	changeColor(img, img_copy_b, 3);
 	imwrite("copy_b.jpg", img_copy_b);
 
 	//red->gray
@@ -269,21 +272,35 @@ void CRGBDlg::OnBnClickedImgSave()
 	cvtColor(img_copy_b, img_copy_bg, CV_BGR2GRAY);
 	imwrite("copy_bg.jpg", img_copy_bg);
 
-	
+	//red->gray->Otsu
+	Mat img_copy_rgo = img_copy_rg.clone();
+	Otsu(img_copy_rgo); //Otsu(입력, 출력)
+	imwrite("copy_rgo.jpg", img_copy_rgo);
 
-	//imshow
+	//green->gray->Otsu
+	Mat img_copy_ggo = img_copy_gg.clone();
+	Otsu(img_copy_ggo); 
+	imwrite("copy_ggo.jpg", img_copy_ggo);
+	
+	//blue->gray->Otsu
+	Mat img_copy_bgo = img_copy_bg.clone();
+	Otsu(img_copy_bgo);
+	imwrite("copy_bgo.jpg", img_copy_bgo);
+
+
+	//2. imshow
 	imshow("Red", img_copy_r);
 	imshow("Green", img_copy_g);
 	imshow("Blue", img_copy_b);
 	imshow("Red_Gray", img_copy_rg);
 	imshow("Green_Gray", img_copy_gg);
 	imshow("Blue_Gray", img_copy_bg);
+	imshow("Red_Gray_Otsu", img_copy_rgo);
+	imshow("Green_Gray_Otsu", img_copy_ggo);
+	imshow("Blue_Gray_Otsu", img_copy_bgo);
 	waitKey(0);
 	destroyAllWindows();
 	
-
-	//cvtColor(img_copy, img_copy, CV_BGR2GRAY);
-
 
 
 	/* 원래 코드
@@ -293,11 +310,11 @@ void CRGBDlg::OnBnClickedImgSave()
 	*/
 }
 
-
+/* 원래 있던 버튼들 코드
 void CRGBDlg::OnBnClickedRedBtn()
 {
 	Mat img_copy = img.clone();
-	chageColor(img, img_copy, 1);
+	changeColor(img, img_copy, 1);
 	DisplayImage(img_copy, 3);
 	img = img_copy.clone();
 }
@@ -306,7 +323,7 @@ void CRGBDlg::OnBnClickedRedBtn()
 void CRGBDlg::OnBnClickedGreenBtn()
 {
 	Mat img_copy = img.clone();
-	chageColor(img, img_copy, 2);
+	changeColor(img, img_copy, 2);
 	DisplayImage(img_copy, 3);
 	img = img_copy.clone();
 }
@@ -315,7 +332,7 @@ void CRGBDlg::OnBnClickedGreenBtn()
 void CRGBDlg::OnBnClickedBlueBtn()
 {
 	Mat img_copy = img.clone();
-	chageColor(img, img_copy, 3);
+	changeColor(img, img_copy, 3);
 	DisplayImage(img_copy, 3);
 	img = img_copy.clone();
 }
@@ -380,8 +397,9 @@ void CRGBDlg::OnBnClickedBtnOtsu()
 	DisplayImage(binary, 3);
 	img = binary.clone();
 }
+*/
 
-void chageColor(Mat img, Mat &copy, int i)
+void changeColor(Mat img, Mat &copy, int i)
 {
 	if (i == 1)
 	{
@@ -438,6 +456,57 @@ void chageColor(Mat img, Mat &copy, int i)
 		}
 	}
 
+}
+
+void Otsu(Mat &img_copy)
+{
+	int nRows = img_copy.rows;
+	int nCols = img_copy.cols;
+	Mat histogram;
+	const int* channel_numbers = { 0 };
+	float channel_range[] = { 0.0, 255.0 };
+	const float* channel_ranges = channel_range;
+	int number_bins = 255;
+	calcHist(&img_copy, 1, channel_numbers, Mat(), histogram, 1, &number_bins, &channel_ranges);
+	float* n = histogram.ptr<float>(0);
+	n[255] = 0.0;
+
+	double p[256] = { 0.0 };
+	double w0[256] = { 0.0 };
+	double w1[256] = { 0.0 };
+	double m0[256] = { 0.0 };
+	double m1[256] = { 0.0 };
+	double sum_ipi[256] = { 0.0 };
+	double mt = 0.0;
+	double sq = 0;
+	double sol_sq = 0.0;
+	int T = 0;
+
+	for (int i = 1; i <= 255; i++) {
+		p[i] = n[i] / 262144;
+		mt += (i * p[i]);
+		w0[i] = w0[i - 1] + p[i];
+		w1[i] = 1 - w0[i];
+		sum_ipi[i] = sum_ipi[i - 1] + (i * p[i]);
+	}
+
+	for (int i = 1; i <= 255; i++) {
+		m0[i] = (sum_ipi[i] / w0[i]);
+		m1[i] = ((sum_ipi[255] - sum_ipi[i]) / w1[i]);
+	}
+
+	for (int i = 1; i <= 255; i++) {
+		sq = (w0[i]) * (1 - w0[i]) * ((m0[i] - m1[i]) * (m0[i] - m1[i]));
+		if (sq > sol_sq) {
+			sol_sq = sq;
+			T = i;
+		}
+	}
+
+	Mat binary;
+	threshold(img_copy, binary, T, 255, CV_THRESH_BINARY);
+	//DisplayImage(binary, 3);
+	img_copy = binary.clone();
 }
 
 
