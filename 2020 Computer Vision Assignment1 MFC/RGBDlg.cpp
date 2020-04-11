@@ -174,6 +174,7 @@ void CRGBDlg::OnBnClickedImgSearch()
 		std::string up_pathName_str(pszConvertedAnsiString_up);
 		img = cv::imread(up_pathName_str);
 		DisplayImage(img, 3);
+
 	}
 }
 void CRGBDlg::DisplayImage(Mat targetMat, int channel)
@@ -234,12 +235,62 @@ void CRGBDlg::DisplayImage(Mat targetMat, int channel)
 	ReleaseDC(pDC);
 }
 
-// save 버튼 클릭 시, copy.jpg로 저장하는 부분
+// save 버튼 클릭 시, 색변환 & 저장하는 부분 / // 색 변경 => (X) Mat img_copy_r, img_copy_g, img_copy_b, img_copy_rg, img_copy_gg, img_copy_bg, img_copy_rgo, img_copy_ggo, img_copy_bgo = img.clone();
 void CRGBDlg::OnBnClickedImgSave()
 {
+	//changeColor & imwrite
+	//red
+	Mat img_copy_r = img.clone(); //Mat img_copy_r; 이렇게 선언만 하는 건 왜 안됨.. cvtColor에서는 선언만 하는거 가능한데.. &주소 때문..?
+	chageColor(img, img_copy_r, 1);
+	imwrite("copy_r.jpg", img_copy_r);
+
+	//green
+	Mat img_copy_g = img.clone();
+	chageColor(img, img_copy_g, 2);
+	imwrite("copy_g.jpg", img_copy_g);
+
+	//blue
+	Mat img_copy_b = img.clone();
+	chageColor(img, img_copy_b, 3);
+	imwrite("copy_b.jpg", img_copy_b);
+
+	//red->gray
+	Mat img_copy_rg; // 선언만 해줘도 됨
+	cvtColor(img_copy_r, img_copy_rg, CV_BGR2GRAY); //cvtColor(원본 이미지(입력), 변환된 이미지(출력), 컬러 변환 코드)
+	imwrite("copy_rg.jpg", img_copy_rg);
+
+	//green->gray
+	Mat img_copy_gg;
+	cvtColor(img_copy_g, img_copy_gg, CV_BGR2GRAY); 
+	imwrite("copy_gg.jpg", img_copy_gg);
+
+	//blue->gray
+	Mat img_copy_bg;
+	cvtColor(img_copy_b, img_copy_bg, CV_BGR2GRAY);
+	imwrite("copy_bg.jpg", img_copy_bg);
+
+	
+
+	//imshow
+	imshow("Red", img_copy_r);
+	imshow("Green", img_copy_g);
+	imshow("Blue", img_copy_b);
+	imshow("Red_Gray", img_copy_rg);
+	imshow("Green_Gray", img_copy_gg);
+	imshow("Blue_Gray", img_copy_bg);
+	waitKey(0);
+	destroyAllWindows();
+	
+
+	//cvtColor(img_copy, img_copy, CV_BGR2GRAY);
+
+
+
+	/* 원래 코드
 	imwrite("copy.jpg", img);
 	MessageBox(_T("이미지 저장 완료!"), _T(""));
 	//imshow();
+	*/
 }
 
 
