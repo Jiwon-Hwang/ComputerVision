@@ -2,3 +2,5 @@ C:\Users\pc\Desktop\cv_hw2_solution\x64\Debug\RGB.exe
 C:\Users\pc\Desktop\cv_hw2_solution\x64\Debug\RGB.pdb
 C:\Users\pc\Desktop\jiwon\4-1\ComputerVision(software)\(re-download)2020 Computer Vision Assignment\2020 Computer Vision Assignment1 MFC\x64\Debug\RGB.exe
 C:\Users\pc\Desktop\jiwon\4-1\ComputerVision(software)\(re-download)2020 Computer Vision Assignment\2020 Computer Vision Assignment1 MFC\x64\Debug\RGB.pdb
+C:\Users\pc\Desktop\jiwon\4-1\ComputerVision(software)\2020 Computer Vision Assignment\2020 Computer Vision Assignment1 MFC\x64\Debug\RGB.exe
+C:\Users\pc\Desktop\jiwon\4-1\ComputerVision(software)\2020 Computer Vision Assignment\2020 Computer Vision Assignment1 MFC\x64\Debug\RGB.pdb
