@@ -286,7 +286,7 @@ void CRGBDlg::OnBnClickedImgSave()
 	Mat rgo_opening;
 	morphologyEx(img_copy_rgo, rgo_opening, MORPH_OPEN, element5);
 	imshow("test", rgo_opening);
-	imwrite("test", rgo_opening);
+	imwrite("test.jpg", rgo_opening);
 
 	//green->gray->Otsu
 	Mat img_copy_ggo = img_copy_gg.clone();
