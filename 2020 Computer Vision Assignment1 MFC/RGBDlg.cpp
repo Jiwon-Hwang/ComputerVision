@@ -241,6 +241,7 @@ void CRGBDlg::DisplayImage(Mat targetMat, int channel)
 // save 버튼 클릭 시, 색변환 & 저장하는 부분 / // 색 변경 => (X) Mat img_copy_r, img_copy_g, img_copy_b, img_copy_rg, img_copy_gg, img_copy_bg, img_copy_rgo, img_copy_ggo, img_copy_bgo = img.clone();
 void CRGBDlg::OnBnClickedImgSave()
 {
+	//과제2 (RGB & GRAY & Otsu)
 	//1. changeColor & imwrite
 	//red
 	Mat img_copy_r = img.clone(); //Mat img_copy_r; 이렇게 선언만 하는 건 왜 안됨.. cvtColor에서는 선언만 하는거 가능한데.. &주소 때문..?
@@ -273,30 +274,53 @@ void CRGBDlg::OnBnClickedImgSave()
 	//imwrite("copy_bg.jpg", img_copy_bg);
 
 
-	//과제3 시작 (Otsu부터 -> opening & closing 연산)
-
-	// 필터 효과를 더 두드러지게 5x5 구조 요소를 사용
-	Mat element5(5, 5, CV_8U, Scalar(1));  
-
 	//red->gray->Otsu
 	Mat img_copy_rgo = img_copy_rg.clone();
 	Otsu(img_copy_rgo); //Otsu(&img)
-	imwrite("copy_rgo.jpg", img_copy_rgo);
-
-	Mat rgo_opening;
-	morphologyEx(img_copy_rgo, rgo_opening, MORPH_OPEN, element5);
-	imshow("test", rgo_opening);
-	imwrite("test.jpg", rgo_opening);
+	//imwrite("copy_rgo.jpg", img_copy_rgo);
 
 	//green->gray->Otsu
 	Mat img_copy_ggo = img_copy_gg.clone();
 	Otsu(img_copy_ggo); 
-	imwrite("copy_ggo.jpg", img_copy_ggo);
+	//imwrite("copy_ggo.jpg", img_copy_ggo);
 	
 	//blue->gray->Otsu
 	Mat img_copy_bgo = img_copy_bg.clone();
 	Otsu(img_copy_bgo);
-	imwrite("copy_bgo.jpg", img_copy_bgo);
+	//imwrite("copy_bgo.jpg", img_copy_bgo);
+
+
+	//과제3 (opening & closing 연산)
+
+	// 필터 효과를 더 두드러지게 5x5 구조 요소를 사용
+	Mat element5(5, 5, CV_8U, Scalar(1));
+	
+	//Opening (열림연산) : erode(침식) -> dilate(팽창)
+	Mat rgo_opening;    //여기서 왜 clone은 안해줘도 되는지는...?
+	morphologyEx(img_copy_rgo, rgo_opening, MORPH_OPEN, element5);
+	imwrite("rgo_opening.jpg", rgo_opening);
+
+	Mat ggo_opening;
+	morphologyEx(img_copy_ggo, ggo_opening, MORPH_OPEN, element5);
+	imwrite("ggo_opening.jpg", ggo_opening);
+
+	Mat bgo_opening;
+	morphologyEx(img_copy_bgo, bgo_opening, MORPH_OPEN, element5);
+	imwrite("bgo_opening.jpg", bgo_opening);
+
+
+	//Closing (닫힘연산) : dilate(팽창) -> erode(침식)
+	Mat rgo_closing;    //여기서 왜 clone은 안해줘도 되는지는...?
+	morphologyEx(img_copy_rgo, rgo_closing, MORPH_CLOSE, element5);
+	imwrite("rgo_closing.jpg", rgo_closing);
+
+	Mat ggo_closing;
+	morphologyEx(img_copy_ggo, ggo_closing, MORPH_CLOSE, element5);
+	imwrite("ggo_closing.jpg", ggo_closing);
+
+	Mat bgo_closing;
+	morphologyEx(img_copy_bgo, bgo_closing, MORPH_CLOSE, element5);
+	imwrite("bgo_closing.jpg", bgo_closing);
 
 
 	//2. imshow
@@ -308,9 +332,18 @@ void CRGBDlg::OnBnClickedImgSave()
 	imshow("Green_Gray", img_copy_gg);
 	imshow("Blue_Gray", img_copy_bg);
 	*/
-	imshow("Red_Gray_Otsu", img_copy_rgo);
-	imshow("Green_Gray_Otsu", img_copy_ggo);
-	imshow("Blue_Gray_Otsu", img_copy_bgo);
+	/*
+	imshow("rgo", img_copy_rgo);
+	imshow("ggo", img_copy_ggo);
+	imshow("bgo", img_copy_bgo);
+	*/
+	imshow("rgo_opening", rgo_opening);
+	imshow("ggo_opening", ggo_opening);
+	imshow("bgo_opening", bgo_opening);
+	imshow("rgo_closing", rgo_closing);
+	imshow("ggo_closing", ggo_closing);
+	imshow("bgo_closing", bgo_closing);
+
 	waitKey(0);
 	destroyAllWindows();
 	
