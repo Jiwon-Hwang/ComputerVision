@@ -359,6 +359,20 @@ void CRGBDlg::OnBnClickedImgSave()
 	ContourTracing(ggo_closing, 0, 0, cp);
 	ContourTracing(bgo_closing, 0, 0, cp);
 
+	imwrite("rgo_opening.jpg", rgo_opening);
+	imwrite("ggo_opening.jpg", ggo_opening);
+	imwrite("bgo_opening.jpg", bgo_opening);
+	imwrite("rgo_closing.jpg", rgo_closing);
+	imwrite("ggo_closing.jpg", ggo_closing);
+	imwrite("bgo_closing.jpg", bgo_closing);
+
+	imshow("rgo_opening", rgo_opening);
+	imshow("ggo_opening", ggo_opening);
+	imshow("bgo_opening", bgo_opening);
+	imshow("rgo_closing", rgo_closing);
+	imshow("ggo_closing", ggo_closing);
+	imshow("bgo_closing", bgo_closing);
+
 	waitKey(0);
 	destroyAllWindows();
 	
@@ -636,19 +650,14 @@ void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp)
 		// 시작점으로 돌아왔고, 진행 방향이 초기화된 경우
 		// 외곽선 추적을 끝낸다.
 		if (x == sx && y == sy && d == 0) {
-			Mat imgTest = imgSrc.clone();
-			imgTest = Scalar(0); //Mat 객체(이미지) 0으로 초기화
+			imgSrc = Scalar(0); //Mat 객체(이미지) 0으로 초기화
 
 			int len = cp.size(); //cp.size() : vector 구조체에 저장된 외각선 point들 개수(구조체 크기) : 6050
 
 			for (int i = 0; i < len; i++) {
-				imgTest.at<uchar>(cp[i].y, cp[i].x) = 255;
+				imgSrc.at<uchar>(cp[i].y, cp[i].x) = 255;
 			}
-			imwrite("imgTest.jpg", imgTest);
-			imshow("hmm", imgTest);
 
-			waitKey(0);
-			destroyAllWindows();
 			/*
 			for (int i = 100; i<200; i++) {
 				printf("%d %d %d\n", cp[i].x, cp[i].y, cp[i]); // 외곽선 좌표들 출력해보기
