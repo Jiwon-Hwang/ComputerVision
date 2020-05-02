@@ -350,11 +350,8 @@ void CRGBDlg::OnBnClickedImgSave()
 	imshow("ggo_closing", ggo_closing);
 	imshow("bgo_closing", bgo_closing);
 	*/
-
-	//°úÁ¦4 (contour tracing)
 	vector<Point> cp;
 	ContourTracing(bgo_closing, 0, 0, cp);
-
 	waitKey(0);
 	destroyAllWindows();
 	
