@@ -8,7 +8,7 @@
 #include "afxdialogex.h"
 //using namespace cv;
 using namespace std;
-
+#pragma comment(linker, "/entry:WinMainCRTStartup /subsystem:console") //콘솔창 출력용 --> 삭제하기
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
