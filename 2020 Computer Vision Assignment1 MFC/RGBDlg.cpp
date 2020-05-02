@@ -15,8 +15,7 @@ using namespace std;
 #endif
 void changeColor(Mat img, Mat &copy, int i);
 void Otsu(Mat& img_copy);
-// contour tracing
-void ContourTracing(Mat imgSrc, int sx, int sy, vector<Point>& cp);
+void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp);
 
 
 // 응용 프로그램 정보에 사용되는 CAboutDlg 대화 상자입니다.
@@ -303,29 +302,29 @@ void CRGBDlg::OnBnClickedImgSave()
 	//Opening (열림연산) : erode(침식) -> dilate(팽창)
 	Mat rgo_opening;    //여기서 왜 clone은 안해줘도 되는지는...?
 	morphologyEx(img_copy_rgo, rgo_opening, MORPH_OPEN, element5);
-	imwrite("rgo_opening.jpg", rgo_opening);
+	//imwrite("rgo_opening.jpg", rgo_opening);
 
 	Mat ggo_opening;
 	morphologyEx(img_copy_ggo, ggo_opening, MORPH_OPEN, element5);
-	imwrite("ggo_opening.jpg", ggo_opening);
+	//imwrite("ggo_opening.jpg", ggo_opening);
 
 	Mat bgo_opening;
 	morphologyEx(img_copy_bgo, bgo_opening, MORPH_OPEN, element5);
-	imwrite("bgo_opening.jpg", bgo_opening);
+	//imwrite("bgo_opening.jpg", bgo_opening);
 
 
 	//Closing (닫힘연산) : dilate(팽창) -> erode(침식)
 	Mat rgo_closing;    //여기서 왜 clone은 안해줘도 되는지는...?
 	morphologyEx(img_copy_rgo, rgo_closing, MORPH_CLOSE, element5);
-	imwrite("rgo_closing.jpg", rgo_closing);
+	//imwrite("rgo_closing.jpg", rgo_closing);
 
 	Mat ggo_closing;
 	morphologyEx(img_copy_ggo, ggo_closing, MORPH_CLOSE, element5);
-	imwrite("ggo_closing.jpg", ggo_closing);
+	//imwrite("ggo_closing.jpg", ggo_closing);
 
 	Mat bgo_closing;
 	morphologyEx(img_copy_bgo, bgo_closing, MORPH_CLOSE, element5);
-	imwrite("bgo_closing.jpg", bgo_closing);
+	//imwrite("bgo_closing.jpg", bgo_closing);
 
 
 	//2. imshow
@@ -353,6 +352,11 @@ void CRGBDlg::OnBnClickedImgSave()
 
 	//과제4 (contour tracing)
 	vector<Point> cp;
+	ContourTracing(rgo_opening, 0, 0, cp);
+	ContourTracing(ggo_opening, 0, 0, cp);
+	ContourTracing(bgo_opening, 0, 0, cp);
+	ContourTracing(rgo_closing, 0, 0, cp);
+	ContourTracing(ggo_closing, 0, 0, cp);
 	ContourTracing(bgo_closing, 0, 0, cp);
 
 	waitKey(0);
@@ -566,7 +570,7 @@ void Otsu(Mat &img_copy)
 	img_copy = binary.clone();
 }
 
-void ContourTracing(Mat imgSrc, int sx, int sy, vector<Point>& cp)
+void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp)
 {
 	int w = imgSrc.cols;
 	int h = imgSrc.rows;
@@ -642,6 +646,7 @@ void ContourTracing(Mat imgSrc, int sx, int sy, vector<Point>& cp)
 			}
 			imwrite("imgTest.jpg", imgTest);
 			imshow("hmm", imgTest);
+
 			waitKey(0);
 			destroyAllWindows();
 			/*
