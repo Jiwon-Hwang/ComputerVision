@@ -352,6 +352,13 @@ void CRGBDlg::OnBnClickedImgSave()
 
 	//과제4 (contour tracing)
 	vector<Point> cp;
+	imshow("1", rgo_opening);
+	imshow("2", ggo_opening);
+	imshow("3", bgo_opening);
+	imshow("4", rgo_closing);
+	imshow("5", ggo_closing);
+	imshow("6", bgo_closing);
+
 	ContourTracing(rgo_opening, 0, 0, cp);
 	ContourTracing(ggo_opening, 0, 0, cp);
 	ContourTracing(bgo_opening, 0, 0, cp);
@@ -653,6 +660,7 @@ void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp)
 			imgSrc = Scalar(0); //Mat 객체(이미지) 0으로 초기화
 
 			int len = cp.size(); //cp.size() : vector 구조체에 저장된 외각선 point들 개수(구조체 크기) : 6050
+			printf("%d\n", len);
 
 			for (int i = 0; i < len; i++) {
 				imgSrc.at<uchar>(cp[i].y, cp[i].x) = 255;
