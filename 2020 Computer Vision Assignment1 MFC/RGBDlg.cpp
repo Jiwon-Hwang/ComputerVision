@@ -634,7 +634,10 @@ void ContourTracing(Mat imgSrc, int sx, int sy, vector<Point>& cp)
 		if (x == sx && y == sy && d == 0) {
 			Mat imgTest = imgSrc.clone();
 			imgTest = Scalar(0); //Mat 객체(이미지) 0으로 초기화
-			for (int i = 0; i<500; i++) {
+
+			int len = cp.size(); //cp.size() : vector 구조체에 저장된 외각선 point들 개수(구조체 크기) : 6050
+
+			for (int i = 0; i < len; i++) {
 				imgTest.at<uchar>(cp[i].y, cp[i].x) = 255;
 			}
 			imwrite("imgTest.jpg", imgTest);

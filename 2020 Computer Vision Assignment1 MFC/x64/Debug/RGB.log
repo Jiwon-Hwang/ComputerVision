@@ -1,3 +1,5 @@
 ﻿  RGBDlg.cpp
+C:\Users\pc\Desktop\jiwon\4-1\ComputerVision(software)\2020 Computer Vision Assignment\2020 Computer Vision Assignment1 MFC\RGBDlg.cpp(637,11): warning C4477: 'printf' : 서식 문자열 '%d'에 'int' 형식의 인수가 필요하지만 variadic 인수 1의 형식이 'unsigned __int64'입니다.
+C:\Users\pc\Desktop\jiwon\4-1\ComputerVision(software)\2020 Computer Vision Assignment\2020 Computer Vision Assignment1 MFC\RGBDlg.cpp(637,11): message : 서식 문자열에서 '%zd'을(를) 사용하는 것이 좋습니다.
 RGBDlg.obj : warning LNK4258: '/entry:WinMainCRTStartup' 지시문은 '/ENTRY:wWinMainCRTStartup' 스위치와 호환되지 않습니다. 무시됩니다.
   RGB.vcxproj -> C:\Users\pc\Desktop\jiwon\4-1\ComputerVision(software)\2020 Computer Vision Assignment\2020 Computer Vision Assignment1 MFC\x64\Debug\RGB.exe
