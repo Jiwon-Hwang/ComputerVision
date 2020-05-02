@@ -632,9 +632,20 @@ void ContourTracing(Mat imgSrc, int sx, int sy, vector<Point>& cp)
 		// 시작점으로 돌아왔고, 진행 방향이 초기화된 경우
 		// 외곽선 추적을 끝낸다.
 		if (x == sx && y == sy && d == 0) {
-			for (int i = 100; i<200; i++) {
-				printf("%d %d\n", cp[i].x, cp[i].y);
+			Mat imgTest = imgSrc.clone();
+			imgTest = Scalar(0); //
+			for (int i = 0; i<500; i++) {
+				imgTest.at<uchar>(cp[i].y, cp[i].x) = 255;
 			}
+			imwrite("imgTest.jpg", imgTest);
+			imshow("hmm", imgTest);
+			waitKey(0);
+			destroyAllWindows();
+			/*
+			for (int i = 100; i<200; i++) {
+				printf("%d %d %d\n", cp[i].x, cp[i].y, cp[i]); // 외곽선 좌표들 출력해보기
+			}
+			*/
 			break;
 		}
 			
