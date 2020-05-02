@@ -352,12 +352,6 @@ void CRGBDlg::OnBnClickedImgSave()
 
 	//과제4 (contour tracing)
 	vector<Point> cp;
-	imshow("1", rgo_opening);
-	imshow("2", ggo_opening);
-	imshow("3", bgo_opening);
-	imshow("4", rgo_closing);
-	imshow("5", ggo_closing);
-	imshow("6", bgo_closing);
 
 	ContourTracing(rgo_opening, 0, 0, cp);
 	ContourTracing(ggo_opening, 0, 0, cp);
@@ -366,19 +360,19 @@ void CRGBDlg::OnBnClickedImgSave()
 	ContourTracing(ggo_closing, 0, 0, cp);
 	ContourTracing(bgo_closing, 0, 0, cp);
 
-	imwrite("rgo_opening.jpg", rgo_opening);
-	imwrite("ggo_opening.jpg", ggo_opening);
-	imwrite("bgo_opening.jpg", bgo_opening);
-	imwrite("rgo_closing.jpg", rgo_closing);
-	imwrite("ggo_closing.jpg", ggo_closing);
-	imwrite("bgo_closing.jpg", bgo_closing);
+	imwrite("rgo_opening_ct.jpg", rgo_opening);
+	imwrite("ggo_opening_ct.jpg", ggo_opening);
+	imwrite("bgo_opening_ct.jpg", bgo_opening);
+	imwrite("rgo_closing_ct.jpg", rgo_closing);
+	imwrite("ggo_closing_ct.jpg", ggo_closing);
+	imwrite("bgo_closing_ct.jpg", bgo_closing);
 
-	imshow("rgo_opening", rgo_opening);
-	imshow("ggo_opening", ggo_opening);
-	imshow("bgo_opening", bgo_opening);
-	imshow("rgo_closing", rgo_closing);
-	imshow("ggo_closing", ggo_closing);
-	imshow("bgo_closing", bgo_closing);
+	imshow("rgo_opening_ct", rgo_opening);
+	imshow("ggo_opening_ct", ggo_opening);
+	imshow("bgo_opening_ct", bgo_opening);
+	imshow("rgo_closing_ct", rgo_closing);
+	imshow("ggo_closing_ct", ggo_closing);
+	imshow("bgo_closing_ct", bgo_closing);
 
 	waitKey(0);
 	destroyAllWindows();
@@ -599,9 +593,11 @@ void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp)
 	// 외곽선 좌표를 저장할 구조체 초기화
 	cp.clear();
 
+	/*
 	// 외곽선 추적 시작 픽셀이 객체가 아니면 종료
 	if (imgSrc.at<uchar>(sy, sx) != 255)
 		return;
+	*/
 
 	int x, y, nx, ny;
 	int d, cnt;
