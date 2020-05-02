@@ -633,7 +633,7 @@ void ContourTracing(Mat imgSrc, int sx, int sy, vector<Point>& cp)
 		// 외곽선 추적을 끝낸다.
 		if (x == sx && y == sy && d == 0) {
 			Mat imgTest = imgSrc.clone();
-			imgTest = Scalar(0); //
+			imgTest = Scalar(0); //Mat 객체(이미지) 0으로 초기화
 			for (int i = 0; i<500; i++) {
 				imgTest.at<uchar>(cp[i].y, cp[i].x) = 255;
 			}
