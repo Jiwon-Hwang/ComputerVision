@@ -6,9 +6,9 @@
 #include "RGB.h"
 #include "RGBDlg.h"
 #include "afxdialogex.h"
-using namespace cv;
+//using namespace cv;
 using namespace std;
-#pragma comment(linker, "/entry:WinMainCRTStartup /subsystem:console")
+
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
