@@ -245,14 +245,36 @@ void CRGBDlg::DisplayImage(Mat targetMat, int channel)
 // save 버튼 클릭 시, 색변환 & 저장하는 부분 / // 색 변경 => (X) Mat img_copy_r, img_copy_g, img_copy_b, img_copy_rg, img_copy_gg, img_copy_bg, img_copy_rgo, img_copy_ggo, img_copy_bgo = img.clone();
 void CRGBDlg::OnBnClickedImgSave()
 {
-	//과제2 (RGB & GRAY & Otsu)
-	Mat img_gray;
-	cvtColor(img, img_gray, CV_BGR2GRAY);
-	imwrite("gray.jpg", img_gray); //==> 보고서에 이미지 첨부용. 실제로는 다 저장할 필요 없음.
-	Otsu(img_gray); //Otsu(&img)
-	imwrite("Otsu.jpg", img_gray);
+	//중간 과제
+	Mat img_copy;
+	cvtColor(img, img_copy, CV_BGR2GRAY);
+	imwrite("gray.jpg", img_copy); //==> 보고서에 이미지 첨부용. 실제로는 다 저장할 필요 없음.
+
+	Otsu(img_copy); //Otsu(&img)
+	imwrite("Otsu.jpg", img_copy);
+
+	Mat element5(5, 5, CV_8U, Scalar(1));
+
+	//Opening (열림연산) : erode(침식) -> dilate(팽창)
+	Mat img_opening;
+	morphologyEx(img_copy, img_opening, MORPH_OPEN, element5);
+	imwrite("img_opening.jpg", img_opening);
+
+	//Closing (닫힘연산) : dilate(팽창) -> erode(침식)
+	Mat img_closing;
+	morphologyEx(img_copy, img_closing, MORPH_CLOSE, element5);
+	imwrite("img_closing.jpg", img_closing);
+
+	vector<Point> cp;
+	ContourTracing(img_opening, 0, 0, cp);
+	imwrite("img_opening_ct.jpg", img_opening);
+	ContourTracing(img_closing, 0, 0, cp);
+	imwrite("img_closing_ct.jpg", img_closing);
+
 
 	/*
+	//과제2 (RGB & GRAY & Otsu)
+
 	//1. changeColor & imwrite
 	//red
 	Mat img_copy_r = img.clone(); //Mat img_copy_r; 이렇게 선언만 하는 건 왜 안됨.. cvtColor에서는 선언만 하는거 가능한데.. &주소 때문..?
@@ -590,7 +612,7 @@ void Otsu(Mat &img_copy)
 	}
 
 	Mat binary;
-	printf("%d", T); // T:이미지마다 다름 ==> 조정하기 (최종 T에 연산x, 위의 식 다시 세우기)
+	//printf("%d", T); // T:이미지마다 다름
 	threshold(img_copy, binary, T, 255, CV_THRESH_BINARY);
 	//DisplayImage(binary, 3);
 	img_copy = binary.clone();
@@ -604,8 +626,8 @@ void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp)
 	// 외곽선 좌표를 저장할 구조체 초기화
 	cp.clear();
 
-	/*
-	// 외곽선 추적 시작 픽셀이 객체가 아니면 종료
+	/* ***원래 객체 : 흰색(255) ==> 내 이미지는 객체(0)으로 두기! 검정부분! (전체 주석 아래 코드부터)
+	// 외곽선 추적 시작 픽셀이 객체(255)가 아니면 종료
 	if (imgSrc.at<uchar>(sy, sx) != 255)
 		return;
 	*/
@@ -632,15 +654,15 @@ void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp)
 		nx = x + dir[d][0];
 		ny = y + dir[d][1];
 
-		if (nx < 0 || nx >= w || ny < 0 || ny >= h || imgSrc.at<uchar>(ny, nx) == 0)
+		if (nx < 0 || nx >= w || ny < 0 || ny >= h || imgSrc.at<uchar>(ny, nx) == 255)
 		{
-			// 진행 방향에 있는 픽셀이 객체가 아닌 경우,
+			// 진행 방향에 있는 픽셀이 객체(0)가 아닌 "배경"일 경우(255),
 			// 시계 방향으로 진행 방향을 바꾸고 다시 시도한다.
 
 			if (++d > 7) d = 0;
 			cnt++;
 
-			// 8방향 모두 배경인 경우 
+			// 8방향 모두 배경(255)인 경우 
 			if (cnt >= 8)
 			{
 				cp.push_back(Point(x, y));
@@ -649,7 +671,7 @@ void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp)
 		}
 		else
 		{
-			// 진행 방향의 픽셀이 객체일 경우, 현재 점을 외곽선 정보에 저장
+			// 진행 방향의 픽셀이 "객체"일 경우, 현재 점을 외곽선 정보에 저장
 			cp.push_back(Point(x, y));
 
 			// 진행 방향으로 이동
@@ -664,13 +686,13 @@ void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp)
 		// 시작점으로 돌아왔고, 진행 방향이 초기화된 경우
 		// 외곽선 추적을 끝낸다.
 		if (x == sx && y == sy && d == 0) {
-			imgSrc = Scalar(0); //Mat 객체(이미지) 0으로 초기화
+			imgSrc = Scalar(255); //Mat 객체(이미지) 255(흰색)으로 초기화
 
-			int len = cp.size(); //cp.size() : vector 구조체에 저장된 외각선 point들 개수(구조체 크기) : 6050
+			int len = cp.size(); //cp.size() : vector 구조체에 저장된 외각선 point들 개수(구조체 크기) : ex.6050
 			printf("%d\n", len);
 
 			for (int i = 0; i < len; i++) {
-				imgSrc.at<uchar>(cp[i].y, cp[i].x) = 255;
+				imgSrc.at<uchar>(cp[i].y, cp[i].x) = 0; //검정색으로 외각선 칠하기 (point들)
 			}
 
 			/*
