@@ -246,52 +246,61 @@ void CRGBDlg::DisplayImage(Mat targetMat, int channel)
 void CRGBDlg::OnBnClickedImgSave()
 {
 	//과제2 (RGB & GRAY & Otsu)
+	Mat img_copy;
+	cvtColor(img, img_copy, CV_BGR2GRAY);
+	//imwrite("gray.jpg", img_copy); ==> 보고서에 이미지 첨부용. 실제로는 다 저장할 필요 없음.
+	Otsu(img_copy); //Otsu(&img)
+	imwrite("Otsu.jpg", img_copy);
+
+	/*
 	//1. changeColor & imwrite
 	//red
 	Mat img_copy_r = img.clone(); //Mat img_copy_r; 이렇게 선언만 하는 건 왜 안됨.. cvtColor에서는 선언만 하는거 가능한데.. &주소 때문..?
 	changeColor(img, img_copy_r, 1);
-	//imwrite("copy_r.jpg", img_copy_r);
+	imwrite("copy_r.jpg", img_copy_r);
 
 	//green
 	Mat img_copy_g = img.clone();
 	changeColor(img, img_copy_g, 2);
-	//imwrite("copy_g.jpg", img_copy_g);
+	imwrite("copy_g.jpg", img_copy_g);
 
 	//blue
 	Mat img_copy_b = img.clone();
 	changeColor(img, img_copy_b, 3);
-	//imwrite("copy_b.jpg", img_copy_b);
+	imwrite("copy_b.jpg", img_copy_b);
+
 
 	//red->gray
 	Mat img_copy_rg; // 선언만 해줘도 됨
 	cvtColor(img_copy_r, img_copy_rg, CV_BGR2GRAY); //cvtColor(원본 이미지(입력), 변환된 이미지(출력), 컬러 변환 코드)
-	//imwrite("copy_rg.jpg", img_copy_rg);
+	imwrite("copy_rg.jpg", img_copy_rg);
 
 	//green->gray
 	Mat img_copy_gg;
 	cvtColor(img_copy_g, img_copy_gg, CV_BGR2GRAY); 
-	//imwrite("copy_gg.jpg", img_copy_gg);
+	imwrite("copy_gg.jpg", img_copy_gg);
 
 	//blue->gray
 	Mat img_copy_bg;
 	cvtColor(img_copy_b, img_copy_bg, CV_BGR2GRAY);
-	//imwrite("copy_bg.jpg", img_copy_bg);
+	imwrite("copy_bg.jpg", img_copy_bg);
 
 
 	//red->gray->Otsu
 	Mat img_copy_rgo = img_copy_rg.clone();
 	Otsu(img_copy_rgo); //Otsu(&img)
-	//imwrite("copy_rgo.jpg", img_copy_rgo);
+	imwrite("copy_rgo.jpg", img_copy_rgo);
 
 	//green->gray->Otsu
 	Mat img_copy_ggo = img_copy_gg.clone();
 	Otsu(img_copy_ggo); 
-	//imwrite("copy_ggo.jpg", img_copy_ggo);
+	imwrite("copy_ggo.jpg", img_copy_ggo);
 	
 	//blue->gray->Otsu
 	Mat img_copy_bgo = img_copy_bg.clone();
 	Otsu(img_copy_bgo);
-	//imwrite("copy_bgo.jpg", img_copy_bgo);
+	imwrite("copy_bgo.jpg", img_copy_bgo);
+	
 
 
 	//과제3 (opening & closing 연산)
@@ -325,7 +334,7 @@ void CRGBDlg::OnBnClickedImgSave()
 	Mat bgo_closing;
 	morphologyEx(img_copy_bgo, bgo_closing, MORPH_CLOSE, element5);
 	//imwrite("bgo_closing.jpg", bgo_closing);
-
+	*/
 
 	//2. imshow
 	/*
@@ -349,7 +358,8 @@ void CRGBDlg::OnBnClickedImgSave()
 	imshow("ggo_closing", ggo_closing);
 	imshow("bgo_closing", bgo_closing);
 	*/
-
+	
+	/*
 	//과제4 (contour tracing)
 	vector<Point> cp;
 
@@ -376,7 +386,7 @@ void CRGBDlg::OnBnClickedImgSave()
 
 	waitKey(0);
 	destroyAllWindows();
-	
+	*/
 
 
 	/* 원래 코드
@@ -580,6 +590,7 @@ void Otsu(Mat &img_copy)
 	}
 
 	Mat binary;
+	printf("%d", T); // T:51 ==> 조정하기
 	threshold(img_copy, binary, T, 255, CV_THRESH_BINARY);
 	//DisplayImage(binary, 3);
 	img_copy = binary.clone();
