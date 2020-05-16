@@ -246,11 +246,11 @@ void CRGBDlg::DisplayImage(Mat targetMat, int channel)
 void CRGBDlg::OnBnClickedImgSave()
 {
 	//과제2 (RGB & GRAY & Otsu)
-	Mat img_copy;
-	cvtColor(img, img_copy, CV_BGR2GRAY);
-	//imwrite("gray.jpg", img_copy); ==> 보고서에 이미지 첨부용. 실제로는 다 저장할 필요 없음.
-	Otsu(img_copy); //Otsu(&img)
-	imwrite("Otsu.jpg", img_copy);
+	Mat img_gray;
+	cvtColor(img, img_gray, CV_BGR2GRAY);
+	imwrite("gray.jpg", img_gray); //==> 보고서에 이미지 첨부용. 실제로는 다 저장할 필요 없음.
+	Otsu(img_gray); //Otsu(&img)
+	imwrite("Otsu.jpg", img_gray);
 
 	/*
 	//1. changeColor & imwrite
@@ -590,7 +590,7 @@ void Otsu(Mat &img_copy)
 	}
 
 	Mat binary;
-	printf("%d", T); // T:51 ==> 조정하기
+	printf("%d", T); // T:이미지마다 다름 ==> 조정하기 (최종 T에 연산x, 위의 식 다시 세우기)
 	threshold(img_copy, binary, T, 255, CV_THRESH_BINARY);
 	//DisplayImage(binary, 3);
 	img_copy = binary.clone();
