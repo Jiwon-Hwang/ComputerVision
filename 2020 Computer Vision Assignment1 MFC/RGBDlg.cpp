@@ -21,8 +21,8 @@ void changeColor(Mat img, Mat &copy, int i);
 void Otsu(Mat& img_copy);
 void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp);
 
-void calCoord(int i, int* y, int* x);
 void read_neighbor8(int y, int x, int neighbor8[], Mat& bImage);
+void calCoord(int i, int* y, int* x);
 void LabelingwithBT(Mat &bImage);
 void BTracing8(int y, int x, int label, int tag, Mat& bImage);
 
@@ -779,7 +779,7 @@ void LabelingwithBT(Mat &bImage) {
 	}
 	*/
 	int labelnumber = 1;
-	for (int i = 1; i < (HEIGHT - 1); i++){
+	for (int i = 1; i < (HEIGHT - 1); i++) {
 		for (int j = 1; j < (WIDTH - 1); j++) {
 			int cur_p = bImage.at<uchar>(i, j); // 현재 위치 읽어오기
 			if (cur_p == 1) {   // object
@@ -803,6 +803,7 @@ void LabelingwithBT(Mat &bImage) {
 			}
 			//else labImage[i][j] = 0;   // background (원래 0으로 초기화 해놔도 됨)
 		}
+	}
 }
 
 
