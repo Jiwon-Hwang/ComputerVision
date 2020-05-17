@@ -24,7 +24,7 @@ void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp);
 void read_neighbor8(int y, int x, int neighbor8[], Mat& bImage);
 void calCoord(int i, int* y, int* x);
 void LabelingwithBT(Mat &bImage);
-void BTracing8(int y, int x, int label, int tag, Mat& bImage);
+void BTracing8(int y, int x, int label, int tag, Mat& bImage, int labImage[]);
 
 
 // 응용 프로그램 정보에 사용되는 CAboutDlg 대화 상자입니다.
@@ -792,13 +792,13 @@ void LabelingwithBT(Mat &bImage) {
 				else  if ((ref_p1 == 0) && (ref_p2 >= 2)) {   // hole
 					//num_region[ref_p2]++;
 					labImage[i][j] = ref_p2;
-					BTracing8(i, j, ref_p2, BACKWARD, bImage); // hole이니까 반대쪽으로 tracing 하도록
+					BTracing8(i, j, ref_p2, BACKWARD, bImage, labImage); // hole이니까 반대쪽으로 tracing 하도록
 				}
 				else  if ((ref_p1 == 0) && (ref_p2 == 0)) { // region start (시작점)
 					labelnumber++;
 					//num_region[labelnumber]++;
 					labImage[i][j] = labelnumber;
-					BTracing8(i, j, labelnumber, FOREWARD, bImage); // 시작점이니까 순방향으로 tracing
+					BTracing8(i, j, labelnumber, FOREWARD, bImage, labImage); // 시작점이니까 순방향으로 tracing
 				}
 			}
 			//else labImage[i][j] = 0;   // background (원래 0으로 초기화 해놔도 됨)
@@ -807,15 +807,19 @@ void LabelingwithBT(Mat &bImage) {
 }
 
 
-void BTracing8(int y, int x, int label, int tag, Mat &bImage) {
+void BTracing8(int y, int x, int label, int tag, Mat &bImage, int labImage[][10000]) {
+	int cur_orient, pre_orient;
+	int end_x, pre_x, end_y, pre_y;
+	int start_o, add_o;
+
 	if (tag == FOREWARD) cur_orient = pre_orient = 0;
 	else cur_orient = pre_orient = 6;
 	end_x = pre_x = x;
 	end_y = pre_y = y;
 
 	do {
-		int neighbbor8[8];
-		read_neighbor8(y, x, neighbbor8, bImage); //neighbbor8는 배열이름이므로, 배열의 첫 주소 넘어감
+		int neighbor8[8];
+		read_neighbor8(y, x, neighbor8, bImage); //neighbbor8는 배열이름이므로, 배열의 첫 주소 넘어감
 		start_o = (8 + cur_orient - 2) % 8;
 		for (int i = 0; i < 8; i++) {
 			add_o = (start_o + i) % 8;        
@@ -828,7 +832,7 @@ void BTracing8(int y, int x, int label, int tag, Mat &bImage) {
 		}
 
 		if (LUT_BLabeling8[pre_orient][cur_orient]) {
-			num_region[label]++;
+			//num_region[label]++;
 			labImage[pre_y][pre_x] = label;
 		}
 
@@ -836,8 +840,6 @@ void BTracing8(int y, int x, int label, int tag, Mat &bImage) {
 		pre_y = y;
 		pre_orient = cur_orient;
 	} //while ((y != end_y) || (x != end_x); ==>?
-}
-
 }
 
 
