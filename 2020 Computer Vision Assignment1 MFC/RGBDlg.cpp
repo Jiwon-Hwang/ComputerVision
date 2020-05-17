@@ -22,7 +22,7 @@ void Otsu(Mat& img_copy);
 void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp);
 
 void calCoord(int i, int* y, int* x);
-void read_neighbor8(int y, int x, int neighbor8[8], Mat& bImage);
+void read_neighbor8(int y, int x, int neighbor8[], Mat& bImage);
 void LabelingwithBT(Mat &bImage);
 void BTracing8(int y, int x, int label, int tag, Mat& bImage);
 
@@ -725,7 +725,7 @@ void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp)
 }
 
 
-void read_neighbor8(int y, int x, int neighbor8[8], Mat &bImage) {
+void read_neighbor8(int y, int x, int neighbor8[], Mat &bImage) {
 	//uchar b = img.at<Vec3b>(y, x)[0]; ==> 3채널 이미지의 픽셀값 가져오기
 	//img.at<uchar>(y, x); ==> 1채널 이미지의 픽셀값 가져오기
 	neighbor8[0] = bImage.at<uchar>(y, x + 1);   neighbor8[1] = bImage.at<uchar>(y + 1, x + 1);
@@ -801,7 +801,7 @@ void LabelingwithBT(Mat &bImage) {
 					BTracing8(i, j, labelnumber, FOREWARD, bImage); // 시작점이니까 순방향으로 tracing
 				}
 			}
-			else labImage[i][j] = 0;   // background (원래 0으로 초기화 해놔도 됨)
+			//else labImage[i][j] = 0;   // background (원래 0으로 초기화 해놔도 됨)
 		}
 }
 
@@ -813,7 +813,8 @@ void BTracing8(int y, int x, int label, int tag, Mat &bImage) {
 	end_y = pre_y = y;
 
 	do {
-		read_neighbor8(y, x, neighbbor8, bImage);
+		int neighbbor8[8];
+		read_neighbor8(y, x, neighbbor8, bImage); //neighbbor8는 배열이름이므로, 배열의 첫 주소 넘어감
 		start_o = (8 + cur_orient - 2) % 8;
 		for (int i = 0; i < 8; i++) {
 			add_o = (start_o + i) % 8;        
