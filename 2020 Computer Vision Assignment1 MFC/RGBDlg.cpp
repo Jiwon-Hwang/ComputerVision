@@ -12,9 +12,7 @@ using namespace std;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
-#define MAX_SIZE 24
-#define HEIGHT
-#define WIDTH
+
 #define FOREWARD 0
 #define BACKWARD 1
 
@@ -24,8 +22,9 @@ void Otsu(Mat& img_copy);
 void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp);
 
 void calCoord(int i, int* y, int* x);
-void LabelingwithBT();
-void BTracing8(int y, int x, int label, int tag);
+void read_neighbor8(int y, int x, int neighbor8[8], Mat& bImage);
+void LabelingwithBT(Mat &bImage);
+void BTracing8(int y, int x, int label, int tag, Mat& bImage);
 
 
 // 응용 프로그램 정보에 사용되는 CAboutDlg 대화 상자입니다.
@@ -283,8 +282,12 @@ void CRGBDlg::OnBnClickedImgSave()
 	imwrite("img_closing_ct.jpg", img_closing);
 	*/
 
-	// 새로운 BTracing8 함수
-	//BTracing8(0, 0, label, FORWARD);
+	// 새로운 contour tracing 함수
+	LabelingwithBT(img_opening);
+	imwrite("img_closing_ct.jpg", img_opening);
+	LabelingwithBT(img_closing);
+	imwrite("img_closing_ct.jpg", img_closing);
+	
 
 
 	/*
@@ -722,11 +725,13 @@ void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp)
 }
 
 
-void read_neighbor8(int y, int x, int neighbor8[8]) {
-	neighbor8[0] = bImage[y][x + 1];   neighbor8[1] = bImage[y + 1][x + 1];
-	neighbor8[2] = bImage[y + 1][x];    neighbor8[3] = bImage [y + 1][x - 1];
-	neighbor8[4] = bImage[y][x - 1];     neighbor8[5] = bImage[y - 1][x - 1];
-	neighbor8[6] = bImage[y - 1][x];     neighbor8[7] = bImage[y - 1][x + 1];
+void read_neighbor8(int y, int x, int neighbor8[8], Mat &bImage) {
+	//uchar b = img.at<Vec3b>(y, x)[0]; ==> 3채널 이미지의 픽셀값 가져오기
+	//img.at<uchar>(y, x); ==> 1채널 이미지의 픽셀값 가져오기
+	neighbor8[0] = bImage.at<uchar>(y, x + 1);   neighbor8[1] = bImage.at<uchar>(y + 1, x + 1);
+	neighbor8[2] = bImage.at<uchar>(y + 1, x);   neighbor8[3] = bImage.at<uchar>(y + 1, x - 1);
+	neighbor8[4] = bImage.at<uchar>(y, x - 1);   neighbor8[5] = bImage.at<uchar>(y - 1, x - 1);
+	neighbor8[6] = bImage.at<uchar>(y - 1, x);   neighbor8[7] = bImage.at<uchar>(y - 1, x + 1);
 } /* end of "Read_neighbor8" */
 
 
@@ -745,49 +750,69 @@ void calCoord(int i, int* y, int* x) {
 }
 
 
-int  LUT_BLabeling4[4][4], LUT_BLabeling8[8][8], num_region[MAX_SIZE], labelnumber;
-void LabelingwithBT() {
-	for (int i = 0; i < MAX_SIZE; i++) { //? num_region?
+// LUT 그림처럼 초기화 미리 해두기(가능한 case들)
+int LUT_BLabeling8[8][8] =  
+{
+	{0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 0, 0, 1, 0, 0},
+	{0, 0, 0, 0, 0, 1, 1, 0},
+	{0, 0, 0, 0, 0, 1, 1, 1},
+	{1, 0, 0, 0, 0, 1, 1, 1},
+	{1, 1, 0, 0, 0, 1, 1, 1},
+	{1, 1, 1, 0, 0, 1, 1, 1},
+	{1, 1, 1, 1, 0, 1, 1, 1}
+};
+
+
+int num_region[1000000], labelnumber;
+
+void LabelingwithBT(Mat &bImage) {
+	int WIDTH = bImage.cols;
+	int HEIGHT = bImage.rows;
+	int MAX_SIZE = WIDTH * HEIGHT;
+
+	//영상 전체(?)를 초기화 (label을 초기화) ==> 3가지 종류의 영역 start, propagation, hole 각각 픽셀 몇개씩인지 기록하는거 아님..?
+	for (int i = 0; i < MAX_SIZE; i++) { 
 		num_region[i] = 0;
-		labelnumber = 1;
 	}
+	labelnumber = 1;
 	for (int i = 1; i < (HEIGHT - 1); i++){
 		for (int j = 1; j < (WIDTH - 1); j++) {
-			int cur_p = bImage[i][j];
+			int cur_p = bImage.at<uchar>(i, j); // 현재 위치 읽어오기
 			if (cur_p == 1) {   // object
-				int ref_p1 = labImage[i][j - 1];
-				int ref_p2 = labImage[i - 1][j - 1];
-				if (ref_p1 > 1) {   // propagation     
+				int ref_p1 = labImage[i][j - 1]; // 내 앞에꺼
+				int ref_p2 = labImage[i - 1][j - 1]; // 내 대각선 위에 꺼
+				if (ref_p1 > 1) {   // propagation (내 앞에꺼가 일단 이미 값이 할당 되었으면(이미 레이블 할당됨), 나는 전파 조건에 따라 전파  
 					num_region[ref_p1]++;
 					labImage[i][j] = ref_p1;
 				}
 				else  if ((ref_p1 == 0) && (ref_p2 >= 2)) {   // hole
 					num_region[ref_p2]++;
 					labImage[i][j] = ref_p2;
-					BTracing8(i, j, ref_p2, BACKWARD);
+					BTracing8(i, j, ref_p2, BACKWARD, bImage); // hole이니까 반대쪽으로 tracing 하도록
 				}
-				else  if ((ref_p1 == 0) && (ref_p2 == 0)) { // region start
+				else  if ((ref_p1 == 0) && (ref_p2 == 0)) { // region start (시작점)
 					labelnumber++;
 					num_region[labelnumber]++;
 					labImage[i][j] = labelnumber;
-					BTracing8(i, j, labelnumber, FOREWARD);
+					BTracing8(i, j, labelnumber, FOREWARD, bImage); // 시작점이니까 순방향으로 tracing
 				}
 			}
-			else labImage[i][j] = 0;   // background
+			else labImage[i][j] = 0;   // background (원래 0으로 초기화 해놔도 됨)
 		}
 }
 
 
-void BTracing8(int y, int x, int label, int tag) {
+void BTracing8(int y, int x, int label, int tag, Mat &bImage) {
 	if (tag == FOREWARD) cur_orient = pre_orient = 0;
 	else cur_orient = pre_orient = 6;
 	end_x = pre_x = x;
 	end_y = pre_y = y;
 
 	do {
-		read_neighbor8(y, x, neighbbor8);
+		read_neighbor8(y, x, neighbbor8, bImage);
 		start_o = (8 + cur_orient - 2) % 8;
-		for (i = 0; i < 8; i++) {
+		for (int i = 0; i < 8; i++) {
 			add_o = (start_o + i) % 8;        
 			if (neighbor8[add_o] != 0) break;
 		}
@@ -805,7 +830,7 @@ void BTracing8(int y, int x, int label, int tag) {
 		pre_x = x;
 		pre_y = y;
 		pre_orient = cur_orient;
-	} //while ((y != end_y) || (x != end_x);
+	} //while ((y != end_y) || (x != end_x); ==>?
 }
 
 }
