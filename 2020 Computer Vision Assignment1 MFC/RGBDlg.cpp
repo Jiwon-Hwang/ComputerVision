@@ -24,7 +24,7 @@ void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp);
 void read_neighbor8(int y, int x, int neighbor8[], Mat& bImage);
 void calCoord(int i, int* y, int* x);
 void LabelingwithBT(Mat &bImage);
-void BTracing8(int y, int x, int label, int tag, Mat& bImage, int labImage[]);
+void BTracing8(int y, int x, int label, int tag, Mat& bImage, int labImage[][10000]);
 
 
 // 응용 프로그램 정보에 사용되는 CAboutDlg 대화 상자입니다.
@@ -817,6 +817,7 @@ void BTracing8(int y, int x, int label, int tag, Mat &bImage, int labImage[][100
 	end_x = pre_x = x;
 	end_y = pre_y = y;
 
+	// do~while문
 	do {
 		int neighbor8[8];
 		read_neighbor8(y, x, neighbor8, bImage); //neighbbor8는 배열이름이므로, 배열의 첫 주소 넘어감
@@ -826,7 +827,7 @@ void BTracing8(int y, int x, int label, int tag, Mat &bImage, int labImage[][100
 			if (neighbor8[add_o] != 0) break;
 		}
 
-		if (i < 8) { 
+		if (1) {  // i < 8 ?
 			calCoord(add_o, &y, &x);
 			cur_orient = add_o; 
 		}
@@ -839,7 +840,8 @@ void BTracing8(int y, int x, int label, int tag, Mat &bImage, int labImage[][100
 		pre_x = x;
 		pre_y = y;
 		pre_orient = cur_orient;
-	} //while ((y != end_y) || (x != end_x); ==>?
+	} 
+	while ((y != end_y) || (x != end_x));
 }
 
 
