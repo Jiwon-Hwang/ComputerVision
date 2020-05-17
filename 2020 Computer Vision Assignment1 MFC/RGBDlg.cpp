@@ -12,10 +12,20 @@ using namespace std;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
+#define MAX_SIZE 24
+#define HEIGHT
+#define WIDTH
+#define FOREWARD 0
+#define BACKWARD 1
+
 #endif
 void changeColor(Mat img, Mat &copy, int i);
 void Otsu(Mat& img_copy);
 void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp);
+
+void calCoord(int i, int* y, int* x);
+void LabelingwithBT();
+void BTracing8(int y, int x, int label, int tag);
 
 
 // 응용 프로그램 정보에 사용되는 CAboutDlg 대화 상자입니다.
@@ -265,11 +275,16 @@ void CRGBDlg::OnBnClickedImgSave()
 	morphologyEx(img_copy, img_closing, MORPH_CLOSE, element5);
 	imwrite("img_closing.jpg", img_closing);
 
+	/* 기존 ContourTracing 함수
 	vector<Point> cp;
 	ContourTracing(img_opening, 0, 0, cp);
 	imwrite("img_opening_ct.jpg", img_opening);
 	ContourTracing(img_closing, 0, 0, cp);
 	imwrite("img_closing_ct.jpg", img_closing);
+	*/
+
+	// 새로운 BTracing8 함수
+	//BTracing8(0, 0, label, FORWARD);
 
 
 	/*
@@ -704,6 +719,95 @@ void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp)
 		}
 			
 	}
+}
+
+
+void read_neighbor8(int y, int x, int neighbor8[8]) {
+	neighbor8[0] = bImage[y][x + 1];   neighbor8[1] = bImage[y + 1][x + 1];
+	neighbor8[2] = bImage[y + 1][x];    neighbor8[3] = bImage [y + 1][x - 1];
+	neighbor8[4] = bImage[y][x - 1];     neighbor8[5] = bImage[y - 1][x - 1];
+	neighbor8[6] = bImage[y - 1][x];     neighbor8[7] = bImage[y - 1][x + 1];
+} /* end of "Read_neighbor8" */
+
+
+
+void calCoord(int i, int* y, int* x) {
+	switch (i) {
+	case 0:  *x = *x + 1;  break;
+	case 1:  *y = *y + 1; *x = *x + 1; break;
+	case 2:  *y = *y + 1; break;
+	case 3:  *y = *y + 1; *x = *x - 1; break;
+	case 4:  *x = *x - 1; break;
+	case 5:  *y = *y - 1; *x = *x - 1; break;
+	case 6:  *y = *y - 1; break;
+	case 7:  *y = *y - 1; *x = *x + 1; break;
+	}  /* end of "switch" */
+}
+
+
+int  LUT_BLabeling4[4][4], LUT_BLabeling8[8][8], num_region[MAX_SIZE], labelnumber;
+void LabelingwithBT() {
+	for (int i = 0; i < MAX_SIZE; i++) { //? num_region?
+		num_region[i] = 0;
+		labelnumber = 1;
+	}
+	for (int i = 1; i < (HEIGHT - 1); i++){
+		for (int j = 1; j < (WIDTH - 1); j++) {
+			int cur_p = bImage[i][j];
+			if (cur_p == 1) {   // object
+				int ref_p1 = labImage[i][j - 1];
+				int ref_p2 = labImage[i - 1][j - 1];
+				if (ref_p1 > 1) {   // propagation     
+					num_region[ref_p1]++;
+					labImage[i][j] = ref_p1;
+				}
+				else  if ((ref_p1 == 0) && (ref_p2 >= 2)) {   // hole
+					num_region[ref_p2]++;
+					labImage[i][j] = ref_p2;
+					BTracing8(i, j, ref_p2, BACKWARD);
+				}
+				else  if ((ref_p1 == 0) && (ref_p2 == 0)) { // region start
+					labelnumber++;
+					num_region[labelnumber]++;
+					labImage[i][j] = labelnumber;
+					BTracing8(i, j, labelnumber, FOREWARD);
+				}
+			}
+			else labImage[i][j] = 0;   // background
+		}
+}
+
+
+void BTracing8(int y, int x, int label, int tag) {
+	if (tag == FOREWARD) cur_orient = pre_orient = 0;
+	else cur_orient = pre_orient = 6;
+	end_x = pre_x = x;
+	end_y = pre_y = y;
+
+	do {
+		read_neighbor8(y, x, neighbbor8);
+		start_o = (8 + cur_orient - 2) % 8;
+		for (i = 0; i < 8; i++) {
+			add_o = (start_o + i) % 8;        
+			if (neighbor8[add_o] != 0) break;
+		}
+
+		if (i < 8) { 
+			calCoord(add_o, &y, &x);
+			cur_orient = add_o; 
+		}
+
+		if (LUT_BLabeling8[pre_orient][cur_orient]) {
+			num_region[label]++;
+			labImage[pre_y][pre_x] = label;
+		}
+
+		pre_x = x;
+		pre_y = y;
+		pre_orient = cur_orient;
+	} //while ((y != end_y) || (x != end_x);
+}
+
 }
 
 
