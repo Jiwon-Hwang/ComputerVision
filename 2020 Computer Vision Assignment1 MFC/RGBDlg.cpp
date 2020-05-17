@@ -764,17 +764,20 @@ int LUT_BLabeling8[8][8] =
 };
 
 
-int num_region[1000000], labelnumber;
+//int num_region[1000000];
+int labelnumber;
 
 void LabelingwithBT(Mat &bImage) {
 	int WIDTH = bImage.cols;
 	int HEIGHT = bImage.rows;
 	int MAX_SIZE = WIDTH * HEIGHT;
 
+	/*
 	//영상 전체(?)를 초기화 (label을 초기화) ==> 3가지 종류의 영역 start, propagation, hole 각각 픽셀 몇개씩인지 기록하는거 아님..?
 	for (int i = 0; i < MAX_SIZE; i++) { 
 		num_region[i] = 0;
 	}
+	*/
 	labelnumber = 1;
 	for (int i = 1; i < (HEIGHT - 1); i++){
 		for (int j = 1; j < (WIDTH - 1); j++) {
