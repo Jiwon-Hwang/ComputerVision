@@ -786,17 +786,17 @@ void LabelingwithBT(Mat &bImage) {
 				int ref_p1 = labImage[i][j - 1]; // 내 앞에꺼
 				int ref_p2 = labImage[i - 1][j - 1]; // 내 대각선 위에 꺼
 				if (ref_p1 > 1) {   // propagation (내 앞에꺼가 일단 이미 값이 할당 되었으면(이미 레이블 할당됨), 나는 전파 조건에 따라 전파  
-					num_region[ref_p1]++;
+					//num_region[ref_p1]++;
 					labImage[i][j] = ref_p1;
 				}
 				else  if ((ref_p1 == 0) && (ref_p2 >= 2)) {   // hole
-					num_region[ref_p2]++;
+					//num_region[ref_p2]++;
 					labImage[i][j] = ref_p2;
 					BTracing8(i, j, ref_p2, BACKWARD, bImage); // hole이니까 반대쪽으로 tracing 하도록
 				}
 				else  if ((ref_p1 == 0) && (ref_p2 == 0)) { // region start (시작점)
 					labelnumber++;
-					num_region[labelnumber]++;
+					//num_region[labelnumber]++;
 					labImage[i][j] = labelnumber;
 					BTracing8(i, j, labelnumber, FOREWARD, bImage); // 시작점이니까 순방향으로 tracing
 				}
