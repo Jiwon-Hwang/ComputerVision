@@ -24,7 +24,7 @@ void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp);
 void read_neighbor8(int y, int x, int neighbor8[], Mat& bImage);
 void calCoord(int i, int* y, int* x);
 void LabelingwithBT(Mat &bImage);
-void BTracing8(int y, int x, int label, int tag, Mat& bImage, int labImage[][10000]);
+void BTracing8(int y, int x, int label, int tag, Mat& bImage, int** labImage);
 
 
 // 응용 프로그램 정보에 사용되는 CAboutDlg 대화 상자입니다.
@@ -284,7 +284,7 @@ void CRGBDlg::OnBnClickedImgSave()
 
 	// 새로운 contour tracing 함수
 	LabelingwithBT(img_opening);
-	imwrite("img_closing_ct.jpg", img_opening);
+	imwrite("img_opening_ct.jpg", img_opening);
 	LabelingwithBT(img_closing);
 	imwrite("img_closing_ct.jpg", img_closing);
 	
@@ -770,7 +770,14 @@ void LabelingwithBT(Mat &bImage) {
 	int WIDTH = bImage.cols;
 	int HEIGHT = bImage.rows;
 	//int MAX_SIZE = WIDTH * HEIGHT;
-	int labImage[10000][10000] = { 0, }; // label 값들 ++하며 기록할 배열(3종류..?), [HEIGHT][WIDTH] 이렇게 변수로 크기 지정 불가!
+	//int labImage[10000][10000] = { 0, }; // label 값들 ++하며 기록할 배열(3종류..?), [HEIGHT][WIDTH] 이렇게 변수로 크기 지정 불가!
+	
+	//메모리 동적할당
+	int** labImage = new int* [10000];
+	for (int i = 0; i < 10000; i++) {
+		labImage[i] = new int[10000];
+		memset(labImage[i], 0, sizeof(int) * 10000);//0으로 초기화 하는 부분
+	}
 
 	/*
 	//영상 전체(?)를 초기화 (label을 초기화) ==> 3가지 종류의 영역 start, propagation, hole 각각 픽셀 몇개씩인지 기록하는거 아님..?
@@ -804,10 +811,14 @@ void LabelingwithBT(Mat &bImage) {
 			//else labImage[i][j] = 0;   // background (원래 0으로 초기화 해놔도 됨)
 		}
 	}
+	for (int i = 0; i < 10000; i++) {
+		delete[] labImage[i];
+	}
+	delete[] labImage;
 }
 
 
-void BTracing8(int y, int x, int label, int tag, Mat &bImage, int labImage[][10000]) {
+void BTracing8(int y, int x, int label, int tag, Mat &bImage, int **labImage) {
 	int cur_orient, pre_orient;
 	int end_x, pre_x, end_y, pre_y;
 	int start_o, add_o;
