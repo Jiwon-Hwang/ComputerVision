@@ -254,6 +254,7 @@ void CRGBDlg::DisplayImage(Mat targetMat, int channel)
 // save 버튼 클릭 시, 색변환 & 저장하는 부분 / // 색 변경 => (X) Mat img_copy_r, img_copy_g, img_copy_b, img_copy_rg, img_copy_gg, img_copy_bg, img_copy_rgo, img_copy_ggo, img_copy_bgo = img.clone();
 void CRGBDlg::OnBnClickedImgSave()
 {
+	
 	//중간 과제
 	Mat img_copy;
 	cvtColor(img, img_copy, CV_BGR2GRAY);
@@ -261,6 +262,16 @@ void CRGBDlg::OnBnClickedImgSave()
 
 	Otsu(img_copy); //Otsu(&img)
 	imwrite("Otsu.jpg", img_copy);
+
+	/* 픽셀값 찍어보기 ==> 0(검은색, 대상)과 255(흰색, 배경)
+	for (int i = 0; i < 300; i++) {
+		for (int j = 0; j < 300; j++) {
+			printf("%d",img_copy.at<uchar>(i, j));
+		}
+		printf("\n");
+	}
+	*/
+	
 
 	Mat element5(5, 5, CV_8U, Scalar(1));
 
@@ -273,6 +284,7 @@ void CRGBDlg::OnBnClickedImgSave()
 	Mat img_closing;
 	morphologyEx(img_copy, img_closing, MORPH_CLOSE, element5);
 	imwrite("img_closing.jpg", img_closing);
+
 
 	/* 기존 ContourTracing 함수
 	vector<Point> cp;
@@ -789,7 +801,7 @@ void LabelingwithBT(Mat &bImage) {
 	for (int i = 1; i < (HEIGHT - 1); i++) {
 		for (int j = 1; j < (WIDTH - 1); j++) {
 			int cur_p = bImage.at<uchar>(i, j); // 현재 위치 읽어오기
-			printf("%d", &cur_p);
+			//printf("%d", &cur_p); ==> 0378...
 			if (cur_p == 0) {   // object
 				int ref_p1 = labImage[i][j - 1]; // 내 앞에꺼
 				int ref_p2 = labImage[i - 1][j - 1]; // 내 대각선 위에 꺼
