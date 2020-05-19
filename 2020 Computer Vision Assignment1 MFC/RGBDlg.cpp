@@ -789,7 +789,8 @@ void LabelingwithBT(Mat &bImage) {
 	for (int i = 1; i < (HEIGHT - 1); i++) {
 		for (int j = 1; j < (WIDTH - 1); j++) {
 			int cur_p = bImage.at<uchar>(i, j); // 현재 위치 읽어오기
-			if (cur_p == 1) {   // object
+			printf("%d", &cur_p);
+			if (cur_p == 0) {   // object
 				int ref_p1 = labImage[i][j - 1]; // 내 앞에꺼
 				int ref_p2 = labImage[i - 1][j - 1]; // 내 대각선 위에 꺼
 				if (ref_p1 > 1) {   // propagation (내 앞에꺼가 일단 이미 값이 할당 되었으면(이미 레이블 할당됨), 나는 전파 조건에 따라 전파  
@@ -811,6 +812,8 @@ void LabelingwithBT(Mat &bImage) {
 			//else labImage[i][j] = 0;   // background (원래 0으로 초기화 해놔도 됨)
 		}
 	}
+
+	//메모리 해제
 	for (int i = 0; i < 10000; i++) {
 		delete[] labImage[i];
 	}
@@ -838,10 +841,9 @@ void BTracing8(int y, int x, int label, int tag, Mat &bImage, int **labImage) {
 			if (neighbor8[add_o] != 0) break;
 		}
 
-		if (1) {  // i < 8 ?
-			calCoord(add_o, &y, &x);
-			cur_orient = add_o; 
-		}
+		calCoord(add_o, &y, &x);
+		cur_orient = add_o; 
+		
 
 		if (LUT_BLabeling8[pre_orient][cur_orient]) {
 			//num_region[label]++;
