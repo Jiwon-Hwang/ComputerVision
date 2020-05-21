@@ -6,7 +6,13 @@
 #include "RGB.h"
 #include "RGBDlg.h"
 #include "afxdialogex.h"
-//using namespace cv;
+#include <iostream>
+
+#include "opencv2/imgcodecs.hpp"
+#include "opencv2/highgui.hpp"
+#include "opencv2/imgproc.hpp"
+
+using namespace cv;
 using namespace std;
 #pragma comment(linker, "/entry:WinMainCRTStartup /subsystem:console") //콘솔창 출력용 --> 삭제하기
 
@@ -306,14 +312,34 @@ void CRGBDlg::OnBnClickedImgSave()
 	Erode(img_tmp2, img_closing, kernel, nRows, nCols);
 	imwrite("img_closing5.jpg", img_closing);
 	
-	
-	
-	
-	/*
+	//Contour Tracing (레이블링)
+	vector<vector<Point>> contours1;
+	vector<Vec4i> hierarchy1;
+	findContours(img_opening, contours1, hierarchy1, RETR_TREE, CHAIN_APPROX_SIMPLE);
+
 	Mat img_opening_ct(nRows, nCols, CV_8U, Scalar(255));
-	LabelImage(nCols, nRows, img_opening, img_opening_ct);
+	img_opening_ct.setTo(cv::Scalar(255));
+	drawContours(img_opening_ct, contours1,
+		-1,    // 모든 외곽선 그리기
+		Scalar(0), // 검게
+		2);    // 두께를 2로
+
 	imwrite("img_opening_ct.jpg", img_opening_ct);
-	*/
+
+	vector<vector<Point>> contours2;
+	vector<Vec4i> hierarchy2;
+	findContours(img_closing, contours2, hierarchy2, RETR_TREE, CHAIN_APPROX_SIMPLE);
+
+	Mat img_closing_ct(nRows, nCols, CV_8U, Scalar(255));
+	img_closing_ct.setTo(cv::Scalar(255));
+	drawContours(img_closing_ct, contours2,
+		-1,    // 모든 외곽선 그리기
+		Scalar(0), // 검게
+		2);    // 두께를 2로
+
+	imwrite("img_closing_ct.jpg", img_closing_ct);
+
+	
 	
 	/*
 	// 기존 ContourTracing 함수
@@ -331,6 +357,12 @@ void CRGBDlg::OnBnClickedImgSave()
 	//LabelingwithBT(img_closing);
 	//imwrite("img_closing_ct.jpg", img_closing);
 	
+
+	/* 새로운 ct 함수 2
+	Mat img_opening_ct(nRows, nCols, CV_8U, Scalar(255));
+	LabelImage(nCols, nRows, img_opening, img_opening_ct);
+	imwrite("img_opening_ct.jpg", img_opening_ct);
+	*/
 
 
 	/*
