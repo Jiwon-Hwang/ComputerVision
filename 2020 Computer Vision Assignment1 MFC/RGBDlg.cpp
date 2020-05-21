@@ -16,6 +16,21 @@ using namespace std;
 #define E_loop 5 //Erosion loop
 #define D_loop 5 //Dilation loop
 
+#define CALL_LabelComponent(x,y,returnLabel) { STACK[SP] = x; STACK[SP + 1] = y; STACK[SP + 2] = returnLabel; SP += 3; goto START; }
+#define RETURN { SP -= 3;                \
+                 switch (STACK[SP+2])    \
+                 {                       \
+                 case 1 : goto RETURN1;  \
+                 case 2 : goto RETURN2;  \
+                 case 3 : goto RETURN3;  \
+                 case 4 : goto RETURN4;  \
+                 default: return;        \
+                 }                       \
+               }
+#define X (STACK[SP-3])
+#define Y (STACK[SP-2])
+
+
 #define FOREWARD 1
 #define BACKWARD 2
 
@@ -25,8 +40,9 @@ void cvtToGray(Mat img, Mat& img_gray, int nRows, int nCols);
 void Otsu(Mat& img_copy, int nRows, int nCols);
 void Erode(Mat& src, Mat& dst, Mat& kernel, int nRows, int nCols);
 void Dilate(Mat& src, Mat& dst, Mat& kernel, int nRows, int nCols);
-void Erosion(Mat& img_copy, int nRows, int nCols);
-void Dilation(Mat& img_copy, int nRows, int nCols);
+void LabelComponent(unsigned short* STACK, unsigned short width, unsigned short height,
+	Mat& input, Mat& output, int labelNo, unsigned short x, unsigned short y);
+void LabelImage(unsigned short width, unsigned short height, Mat& input, Mat& output);
 void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp);
 
 void read_neighbor8(int y, int x, int neighbor8[], Mat& bImage);
@@ -293,14 +309,24 @@ void CRGBDlg::OnBnClickedImgSave()
 	Erode(img_tmp2, img_closing, kernel, nRows, nCols);
 	imwrite("img_closing5.jpg", img_closing);
 	
+	/*
+	unsigned short W = 640;
+	unsigned short H = 480;
+	Mat input(H, W, CV_8UC1);
+	Mat output(H, W, CV_32SC1, 0);
+	*/
+	
+	Mat img_opening_ct(nRows, nCols, CV_8U);
+	LabelImage(nCols, nRows, img_opening, img_opening_ct);
+	imwrite("img_opening_ct.jpg", img_opening);
 
-	///* 기존 ContourTracing 함수
+	//// 기존 ContourTracing 함수
 	//vector<Point> cp;
 	//ContourTracing(img_opening, 0, 0, cp);
 	//imwrite("img_opening_ct.jpg", img_opening);
 	//ContourTracing(img_closing, 0, 0, cp);
 	//imwrite("img_closing_ct.jpg", img_closing);
-	//*/
+	
 
 	//// 새로운 contour tracing 함수
 	//LabelingwithBT(img_opening);
@@ -748,7 +774,7 @@ void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp)
 		nx = x + dir[d][0];
 		ny = y + dir[d][1];
 
-		if (nx < 0 || nx >= w || ny < 0 || ny >= h || imgSrc.at<uchar>(ny, nx) == 255)
+		if (nx < 0 || nx >= w || ny < 0 || ny >= h || imgSrc.at<uchar>(ny, nx) == 0xfff)
 		{
 			// 진행 방향에 있는 픽셀이 객체(0)가 아닌 "배경"일 경우(255),
 			// 시계 방향으로 진행 방향을 바꾸고 다시 시도한다.
@@ -786,7 +812,7 @@ void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp)
 			printf("%d\n", len);
 
 			for (int i = 0; i < len; i++) {
-				imgSrc.at<uchar>(cp[i].y, cp[i].x) = 0; //검정색으로 외각선 칠하기 (point들)
+				imgSrc.at<uchar>(cp[i].y, cp[i].x) = 0x000; //검정색으로 외각선 칠하기 (point들)
 			}
 
 			/*
@@ -937,6 +963,59 @@ void BTracing8(int y, int x, int label, int tag, Mat &bImage, int **labImage) {
 }
 
 
+void LabelComponent(unsigned short* STACK, unsigned short width, unsigned short height,
+	Mat& input, Mat& output, int labelNo, unsigned short x, unsigned short y)
+{
+	printf("%d %d\n", width, height);
+	STACK[0] = x;
+	STACK[1] = y;
+	STACK[2] = 0;  /* return - component is labelled */
+	int SP = 3;
+	//int index;
 
+START: /* Recursive routine starts here */
+
+	//index = X + width * Y; // 2차원 배열의 인덱스를 1차원처럼 늘려서 계산한 것!
+	if (input.at<uchar>(y, x) == 0) RETURN;   /* This pixel is not part of a component */
+	if (output.at<uchar>(y, x) != 0) RETURN;   /* This pixel has already been labelled  */
+	output.at<uchar>(y, x) = labelNo;
+
+	if (X > 0) CALL_LabelComponent(X - 1, Y, 1);   /* left  pixel */
+RETURN1:
+
+	if (X < width - 1) CALL_LabelComponent(X + 1, Y, 2);   /* right pixel */
+RETURN2:
+
+	if (Y > 0) CALL_LabelComponent(X, Y - 1, 3);   /* upper pixel */
+RETURN3:
+
+	if (Y < height - 1) CALL_LabelComponent(X, Y + 1, 4);   /* lower pixel */
+RETURN4:
+
+	RETURN;
+}
+
+void LabelImage(unsigned short width, unsigned short height, Mat &input, Mat &output)
+{
+	printf("%d %d\n", width, height);
+	unsigned short* STACK = (unsigned short*)malloc(3 * sizeof(unsigned short) * (width * height + 1));
+
+	int labelNo = 0;
+	//int index = -1;
+	for (unsigned short y = 0; y < height; y++)
+	{
+		for (unsigned short x = 0; x < width; x++)
+		{
+			//index++;
+			if (input.at<uchar>(y, x) == 0) continue;   /* This pixel is not part of a component */
+			if (output.at<uchar>(y, x) != 0) continue;   /* This pixel has already been labelled  */
+			/* New component found */
+			labelNo++;
+			LabelComponent(STACK, width, height, input, output, labelNo, x, y);
+		}
+	}
+
+	free(STACK);
+}
 
 
