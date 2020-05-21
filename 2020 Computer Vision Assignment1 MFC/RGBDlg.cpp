@@ -316,7 +316,7 @@ void CRGBDlg::OnBnClickedImgSave()
 	Mat output(H, W, CV_32SC1, 0);
 	*/
 	
-	Mat img_opening_ct(nRows, nCols, CV_8U);
+	Mat img_opening_ct(nRows, nCols, CV_8U, Scalar(0));
 	LabelImage(nCols, nRows, img_opening, img_opening_ct);
 	imwrite("img_opening_ct.jpg", img_opening);
 
