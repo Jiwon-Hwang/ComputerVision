@@ -18,6 +18,7 @@ using namespace std;
 
 #endif
 void changeColor(Mat img, Mat &copy, int i);
+void cvtToGray(Mat& img);
 void Otsu(Mat& img_copy);
 void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp);
 
@@ -256,49 +257,52 @@ void CRGBDlg::OnBnClickedImgSave()
 {
 	
 	//중간 과제
-	Mat img_copy;
-	cvtColor(img, img_copy, CV_BGR2GRAY);
+	//Mat img_copy;
+	//cvtColor(img, img_copy, CV_BGR2GRAY);
+
+	Mat img_copy = img.clone();
+	cvtToGray(img_copy);
 	imwrite("gray.jpg", img_copy); //==> 보고서에 이미지 첨부용. 실제로는 다 저장할 필요 없음.
 
-	Otsu(img_copy); //Otsu(&img)
-	imwrite("Otsu.jpg", img_copy);
+	//Otsu(img_copy); //Otsu(&img)
+	//imwrite("Otsu.jpg", img_copy);
 
-	/* 픽셀값 찍어보기 ==> 0(검은색, 대상)과 255(흰색, 배경)
-	for (int i = 0; i < 300; i++) {
-		for (int j = 0; j < 300; j++) {
-			printf("%d",img_copy.at<uchar>(i, j));
-		}
-		printf("\n");
-	}
-	*/
-	
+	///* 픽셀값 찍어보기 ==> 0(검은색, 대상)과 255(흰색, 배경)
+	//for (int i = 0; i < 300; i++) {
+	//	for (int j = 0; j < 300; j++) {
+	//		printf("%d",img_copy.at<uchar>(i, j));
+	//	}
+	//	printf("\n");
+	//}
+	//*/
+	//
 
-	Mat element5(5, 5, CV_8U, Scalar(1));
+	//Mat element5(5, 5, CV_8U, Scalar(1));
 
-	//Opening (열림연산) : erode(침식) -> dilate(팽창)
-	Mat img_opening;
-	morphologyEx(img_copy, img_opening, MORPH_OPEN, element5);
-	imwrite("img_opening.jpg", img_opening);
+	////Opening (열림연산) : erode(침식) -> dilate(팽창)
+	//Mat img_opening;
+	//morphologyEx(img_copy, img_opening, MORPH_OPEN, element5);
+	//imwrite("img_opening.jpg", img_opening);
 
-	//Closing (닫힘연산) : dilate(팽창) -> erode(침식)
-	Mat img_closing;
-	morphologyEx(img_copy, img_closing, MORPH_CLOSE, element5);
-	imwrite("img_closing.jpg", img_closing);
+	////Closing (닫힘연산) : dilate(팽창) -> erode(침식)
+	//Mat img_closing;
+	//morphologyEx(img_copy, img_closing, MORPH_CLOSE, element5);
+	//imwrite("img_closing.jpg", img_closing);
 
 
-	/* 기존 ContourTracing 함수
-	vector<Point> cp;
-	ContourTracing(img_opening, 0, 0, cp);
-	imwrite("img_opening_ct.jpg", img_opening);
-	ContourTracing(img_closing, 0, 0, cp);
-	imwrite("img_closing_ct.jpg", img_closing);
-	*/
+	///* 기존 ContourTracing 함수
+	//vector<Point> cp;
+	//ContourTracing(img_opening, 0, 0, cp);
+	//imwrite("img_opening_ct.jpg", img_opening);
+	//ContourTracing(img_closing, 0, 0, cp);
+	//imwrite("img_closing_ct.jpg", img_closing);
+	//*/
 
-	// 새로운 contour tracing 함수
-	LabelingwithBT(img_opening);
-	imwrite("img_opening_ct.jpg", img_opening);
-	LabelingwithBT(img_closing);
-	imwrite("img_closing_ct.jpg", img_closing);
+	//// 새로운 contour tracing 함수
+	//LabelingwithBT(img_opening);
+	//imwrite("img_opening_ct.jpg", img_opening);
+	//LabelingwithBT(img_closing);
+	//imwrite("img_closing_ct.jpg", img_closing);
 	
 
 
@@ -596,6 +600,23 @@ void changeColor(Mat img, Mat &copy, int i)
 
 }
 
+void cvtToGray(Mat & img_gray) {
+	int nRows = img_gray.rows;
+	int nCols = img_gray.cols;
+	for (int i = 0; i < nRows; i++) {
+		for (int j = 0; j < nCols; j++) {
+			Vec3b intensity = img_gray.at<Vec3b>(i, j); // 접근할 픽셀의 (y, x)좌표값을 통해 이미지의 픽셀값에 접근
+			int blue = intensity.val[0];
+			int green = intensity.val[1];
+			int red = intensity.val[2];
+
+			img_gray.at<uchar>(i, j) = (blue + green + red) / 3;
+
+		}
+	}
+}
+
+
 void Otsu(Mat &img_copy)
 {
 	int nRows = img_copy.rows;
@@ -781,7 +802,9 @@ int LUT_BLabeling8[8][8] =
 void LabelingwithBT(Mat &bImage) {
 	int WIDTH = bImage.cols;
 	int HEIGHT = bImage.rows;
-	//int MAX_SIZE = WIDTH * HEIGHT;
+	//printf("%d\n", WIDTH); ==> 568
+	//printf("%d\n", HEIGHT); ==> 568
+
 	//int labImage[10000][10000] = { 0, }; // label 값들 ++하며 기록할 배열(3종류..?), [HEIGHT][WIDTH] 이렇게 변수로 크기 지정 불가!
 	
 	//메모리 동적할당
@@ -798,10 +821,11 @@ void LabelingwithBT(Mat &bImage) {
 	}
 	*/
 	int labelnumber = 1;
+
 	for (int i = 1; i < (HEIGHT - 1); i++) {
 		for (int j = 1; j < (WIDTH - 1); j++) {
 			int cur_p = bImage.at<uchar>(i, j); // 현재 위치 읽어오기
-			//printf("%d", &cur_p); ==> 0378...
+			//printf("%d\n", cur_p); //==> 모두 255.. 맨 마지막에만 0 (0 하나만 가져오고 끝남)
 			if (cur_p == 0) {   // object
 				int ref_p1 = labImage[i][j - 1]; // 내 앞에꺼
 				int ref_p2 = labImage[i - 1][j - 1]; // 내 대각선 위에 꺼
