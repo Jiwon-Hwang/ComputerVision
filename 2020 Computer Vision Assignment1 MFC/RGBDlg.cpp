@@ -18,7 +18,7 @@ using namespace std;
 
 #endif
 void changeColor(Mat img, Mat &copy, int i);
-void cvtToGray(Mat& img);
+void cvtToGray(Mat img, Mat& img_gray, int nRows, int nCols);
 void Otsu(Mat& img_copy);
 void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp);
 
@@ -257,12 +257,12 @@ void CRGBDlg::OnBnClickedImgSave()
 {
 	
 	//중간 과제
-	//Mat img_copy;
-	//cvtColor(img, img_copy, CV_BGR2GRAY);
 
-	Mat img_copy = img.clone();
-	cvtToGray(img_copy);
-	imwrite("gray.jpg", img_copy); //==> 보고서에 이미지 첨부용. 실제로는 다 저장할 필요 없음.
+	int nRows = img.rows;
+	int nCols = img.cols;
+	Mat img_copy(nRows, nCols, CV_8UC1); // Mat img(rows, cols, type)
+	cvtToGray(img, img_copy, nRows, nCols); // cvtColor(img, img_copy, CV_BGR2GRAY);
+	imwrite("gray.jpg", img_copy); 
 
 	//Otsu(img_copy); //Otsu(&img)
 	//imwrite("Otsu.jpg", img_copy);
@@ -600,18 +600,14 @@ void changeColor(Mat img, Mat &copy, int i)
 
 }
 
-void cvtToGray(Mat & img_gray) {
-	int nRows = img_gray.rows;
-	int nCols = img_gray.cols;
+void cvtToGray(Mat img, Mat &img_gray, int nRows, int nCols) {
 	for (int i = 0; i < nRows; i++) {
 		for (int j = 0; j < nCols; j++) {
-			Vec3b intensity = img_gray.at<Vec3b>(i, j); // 접근할 픽셀의 (y, x)좌표값을 통해 이미지의 픽셀값에 접근
-			int blue = intensity.val[0];
-			int green = intensity.val[1];
-			int red = intensity.val[2];
+			uchar b = img.at<Vec3b>(i, j)[0]; // 접근할 픽셀의 (y, x)좌표값을 통해 이미지의 픽셀값에 접근
+			uchar g = img.at<Vec3b>(i, j)[1];
+			uchar r = img.at<Vec3b>(i, j)[2];
 
-			img_gray.at<uchar>(i, j) = (blue + green + red) / 3;
-
+			img_gray.at<uchar>(i, j) = (r + g + b) / 3.0;
 		}
 	}
 }
