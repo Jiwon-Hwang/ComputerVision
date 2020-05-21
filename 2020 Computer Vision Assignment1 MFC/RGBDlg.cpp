@@ -310,15 +310,12 @@ void CRGBDlg::OnBnClickedImgSave()
 	imwrite("img_closing5.jpg", img_closing);
 	
 	/*
-	unsigned short W = 640;
-	unsigned short H = 480;
-	Mat input(H, W, CV_8UC1);
-	Mat output(H, W, CV_32SC1, 0);
+	Mat img_opening_ct(nRows, nCols, CV_8U, Scalar(255));
+	LabelImage(nCols, nRows, img_opening, img_opening_ct);
+	imwrite("img_opening_ct.jpg", img_opening_ct);
 	*/
 	
-	Mat img_opening_ct(nRows, nCols, CV_8U, Scalar(0));
-	LabelImage(nCols, nRows, img_opening, img_opening_ct);
-	imwrite("img_opening_ct.jpg", img_opening);
+	
 
 	//// 기존 ContourTracing 함수
 	//vector<Point> cp;
@@ -966,7 +963,7 @@ void BTracing8(int y, int x, int label, int tag, Mat &bImage, int **labImage) {
 void LabelComponent(unsigned short* STACK, unsigned short width, unsigned short height,
 	Mat& input, Mat& output, int labelNo, unsigned short x, unsigned short y)
 {
-	printf("%d %d\n", width, height);
+	printf("LabelComponent : %d %d\n", width, height);
 	STACK[0] = x;
 	STACK[1] = y;
 	STACK[2] = 0;  /* return - component is labelled */
@@ -976,8 +973,8 @@ void LabelComponent(unsigned short* STACK, unsigned short width, unsigned short 
 START: /* Recursive routine starts here */
 
 	//index = X + width * Y; // 2차원 배열의 인덱스를 1차원처럼 늘려서 계산한 것!
-	if (input.at<uchar>(Y, X) == 0) RETURN;   /* This pixel is not part of a component */
-	if (output.at<uchar>(Y, X) != 0) RETURN;   /* This pixel has already been labelled  */
+	if (input.at<uchar>(Y, X) == 255) RETURN;   /* This pixel is not part of a component */
+	if (output.at<uchar>(Y, X) != 255) RETURN;   /* This pixel has already been labelled(0) (라벨링 안된 초기값 : 255  */
 	output.at<uchar>(Y, X) = labelNo;
 
 	if (X > 0) CALL_LabelComponent(X - 1, Y, 1);   /* left  pixel */
@@ -997,7 +994,7 @@ RETURN4:
 
 void LabelImage(unsigned short width, unsigned short height, Mat &input, Mat &output)
 {
-	printf("%d %d\n", width, height);
+	printf("LabelImage : %d %d\n", width, height);
 	unsigned short* STACK = (unsigned short*)malloc(3 * sizeof(unsigned short) * (width * height + 1));
 
 	int labelNo = 0;
@@ -1007,14 +1004,14 @@ void LabelImage(unsigned short width, unsigned short height, Mat &input, Mat &ou
 		for (unsigned short x = 0; x < width; x++)
 		{
 			//index++;
-			if (input.at<uchar>(y, x) == 0) continue;   /* This pixel is not part of a component */
-			if (output.at<uchar>(y, x) != 0) continue;   /* This pixel has already been labelled  */
+			if (input.at<uchar>(y, x) == 255) continue;   /* This pixel is not part of a component */
+			if (output.at<uchar>(y, x) != 255) continue;   /* This pixel has already been labelled  */
 			/* New component found */
 			labelNo++;
 			LabelComponent(STACK, width, height, input, output, labelNo, x, y);
 		}
 	}
-
+	
 	free(STACK);
 }
 
