@@ -13,9 +13,6 @@ using namespace std;
 #ifdef _DEBUG
 #define new DEBUG_NEW
 
-#define E_loop 5 //Erosion loop
-#define D_loop 5 //Dilation loop
-
 #define CALL_LabelComponent(x,y,returnLabel) { STACK[SP] = x; STACK[SP + 1] = y; STACK[SP + 2] = returnLabel; SP += 3; goto START; }
 #define RETURN { SP -= 3;                \
                  switch (STACK[SP+2])    \
@@ -43,7 +40,7 @@ void Dilate(Mat& src, Mat& dst, Mat& kernel, int nRows, int nCols);
 void LabelComponent(unsigned short* STACK, unsigned short width, unsigned short height,
 	Mat& input, Mat& output, int labelNo, unsigned short x, unsigned short y);
 void LabelImage(unsigned short width, unsigned short height, Mat& input, Mat& output);
-void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp);
+void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp, int w, int h);
 
 void read_neighbor8(int y, int x, int neighbor8[], Mat& bImage);
 void calCoord(int i, int* y, int* x);
@@ -309,20 +306,23 @@ void CRGBDlg::OnBnClickedImgSave()
 	Erode(img_tmp2, img_closing, kernel, nRows, nCols);
 	imwrite("img_closing5.jpg", img_closing);
 	
+	
+	
+	
 	/*
 	Mat img_opening_ct(nRows, nCols, CV_8U, Scalar(255));
 	LabelImage(nCols, nRows, img_opening, img_opening_ct);
 	imwrite("img_opening_ct.jpg", img_opening_ct);
 	*/
 	
-	
-
-	//// 기존 ContourTracing 함수
-	//vector<Point> cp;
-	//ContourTracing(img_opening, 0, 0, cp);
-	//imwrite("img_opening_ct.jpg", img_opening);
-	//ContourTracing(img_closing, 0, 0, cp);
-	//imwrite("img_closing_ct.jpg", img_closing);
+	/*
+	// 기존 ContourTracing 함수
+	vector<Point> cp;
+	ContourTracing(img_opening, 0, 0, cp, nCols, nRows);
+	imwrite("img_opening_ct.jpg", img_opening);
+	ContourTracing(img_closing, 0, 0, cp, nCols, nRows);
+	imwrite("img_closing_ct.jpg", img_closing);
+	*/
 	
 
 	//// 새로운 contour tracing 함수
@@ -735,11 +735,8 @@ void Dilate(Mat& src, Mat& dst, Mat& kernel, int nRows, int nCols) {
 
 
 
-void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp)
+void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp, int w, int h)
 {
-	int w = imgSrc.cols;
-	int h = imgSrc.rows;
-
 	// 외곽선 좌표를 저장할 구조체 초기화
 	cp.clear();
 
