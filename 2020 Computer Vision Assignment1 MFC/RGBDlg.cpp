@@ -23,6 +23,8 @@ using namespace std;
 void changeColor(Mat img, Mat &copy, int i);
 void cvtToGray(Mat img, Mat& img_gray, int nRows, int nCols);
 void Otsu(Mat& img_copy, int nRows, int nCols);
+void Erode(Mat& src, Mat& dst, Mat& kernel, int nRows, int nCols);
+void Dilate(Mat& src, Mat& dst, Mat& kernel, int nRows, int nCols);
 void Erosion(Mat& img_copy, int nRows, int nCols);
 void Dilation(Mat& img_copy, int nRows, int nCols);
 void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp);
@@ -268,36 +270,29 @@ void CRGBDlg::OnBnClickedImgSave()
 	int nCols = img.cols;
 	Mat img_copy(nRows, nCols, CV_8UC1); // Mat img(rows, cols, type)
 	cvtToGray(img, img_copy, nRows, nCols); // cvtColor(img, img_copy, CV_BGR2GRAY);
-	imwrite("gray.jpg", img_copy); 
+	imwrite("img_gray.jpg", img_copy); 
 
 	//이진화
 	Otsu(img_copy, nRows, nCols);
-	imwrite("Otsu.jpg", img_copy);
+	imwrite("img_Otsu.jpg", img_copy);
 
-	//형태학적 연산
-	Mat opening = img_copy.clone();
-	Erosion(opening, nRows, nCols);
-	Dilation(opening, nRows, nCols);
-	imwrite("opening.jpg", opening);
+	//형태학적 연산 (morphologyEx)
+	Mat kernel(5, 5, CV_8U, Scalar(1)); // Mat kernel = Mat::ones(5, 5, CV_8U);
 
-	Mat closing = img_copy.clone();;
-	Dilation(closing, nRows, nCols);
-	Erosion(closing, nRows, nCols);
-	imwrite("closing.jpg", closing);
+	//Opening (열림연산) : erode(침식) -> dilate(팽창)
+	Mat img_tmp1 = img_copy.clone();
+	Mat img_opening = img_copy.clone();
+	Erode(img_copy, img_tmp1, kernel, nRows, nCols);
+	Dilate(img_tmp1, img_opening, kernel, nRows, nCols);
+	imwrite("img_opening5.jpg", img_opening);
+
+	//Closing (닫힘연산) : dilate(팽창) -> erode(침식)
+	Mat img_tmp2 = img_copy.clone();
+	Mat img_closing = img_copy.clone();
+	Dilate(img_copy, img_tmp2, kernel, nRows, nCols);
+	Erode(img_tmp2, img_closing, kernel, nRows, nCols);
+	imwrite("img_closing5.jpg", img_closing);
 	
-
-	//Mat element5(5, 5, CV_8U, Scalar(1));
-
-	////Opening (열림연산) : erode(침식) -> dilate(팽창)
-	//Mat img_opening;
-	//morphologyEx(img_copy, img_opening, MORPH_OPEN, element5);
-	//imwrite("img_opening.jpg", img_opening);
-
-	////Closing (닫힘연산) : dilate(팽창) -> erode(침식)
-	//Mat img_closing;
-	//morphologyEx(img_copy, img_closing, MORPH_CLOSE, element5);
-	//imwrite("img_closing.jpg", img_closing);
-
 
 	///* 기존 ContourTracing 함수
 	//vector<Point> cp;
@@ -672,47 +667,49 @@ void Otsu(Mat &img_copy, int nRows, int nCols)
 	img_copy = binary.clone();
 }
 
-void Erosion(Mat &img_copy, int nRows, int nCols) {
-	//tmp 정의, 초기화
-	Mat tmp(nRows, nCols, CV_8UC1, Scalar(0)); //Mat 객체 0으로 초기화, 크기 지정
-	
-	for (int i = 0; i < E_loop; i++) {
-		for (int h = 0; h < nRows; h++) {
-			for (int w = 0; w < nCols; w++) {
-				tmp.at<uchar>(h, w) = img_copy.at<uchar>(h, w);
-			}
-		}
-		for (int h = 1; h < nRows - 1; h++) {
-			for (int w = 1; w < nCols - 1; w++) {
-				if (img_copy.at<uchar>(h, w) != 0) {
-					if (tmp.at<uchar>(h-1, w-1) == 0 || tmp.at<uchar>(h, w - 1) == 0 || tmp.at<uchar>(h + 1, w - 1) == 0 ||
-						tmp.at<uchar>(h - 1, w) == 0 || tmp.at<uchar>(h + 1, w) == 0 ||
-						tmp.at<uchar>(h - 1, w + 1) == 0 || tmp.at<uchar>(h + 1, w + 1) == 0) {
-						tmp.at<uchar>(h, w) = 0;
+
+// Erode : 필터 영역 내 픽셀들 중 최소 픽셀 값(0)을 현재 픽셀 값에 대입, 최소값(min)필터 역할
+void Erode(Mat& src, Mat& dst, Mat& kernel, int nRows, int nCols) {
+	int iMin, iVal;
+	for (int i = 0; i < nRows - 4; i++) {
+		for (int j = 0; j < nCols - 4; j++) {
+			iMin = 0xFFF;
+			for (int ii = 0; ii < kernel.rows; ii++) {
+				for (int jj = 0; jj < kernel.cols; jj++) {
+					if (kernel.at<uchar>(ii, jj)) {
+						iVal = src.at<uchar>(i + ii, j + jj);
+						if (iMin > iVal) {
+							iMin = iVal;
+						}
 					}
 				}
 			}
+			dst.at<uchar>(i + 1, j + 1) = iMin;
 		}
 	}
 }
 
-void Dilation(Mat& img_copy, int nRows, int nCols) {
-	for (int i = 0; i < D_loop; i++) {
-		//tmp 정의, 초기화
-		Mat tmp = img_copy.clone(); // 깊은 복사 (각각 다른 메모리 참조)
-		for (int h = 1; h < nRows - 1; h++) {
-			for (int w = 1; w < nCols - 1; w++) {
-				if (img_copy.at<uchar>(h, w) == 0) {
-					if (tmp.at<uchar>(h-1, w-1) != 0 || tmp.at<uchar>(h, w-1) != 0 || tmp.at<uchar>(h+1, w-1) != 0 ||
-						tmp.at<uchar>(h-1, w) != 0 || tmp.at<uchar>(h+1, w) != 0 ||
-						tmp.at<uchar>(h-1, w+1) != 0 || tmp.at<uchar>(h+1, w+1) != 0) {
-						tmp.at<uchar>(h, w) = 255;
+// Dilation : 필터 영역 내 픽셀들 중 최대 픽셀 값(255)을 현재 픽셀 값에 대입, 최대값(max)필터 역할
+void Dilate(Mat& src, Mat& dst, Mat& kernel, int nRows, int nCols) {
+	int iMax, iVal;
+	for (int i = 0; i < nRows - 4; i++) {
+		for (int j = 0; j < nCols - 4; j++) {
+			iMax = 0x000;
+			for (int ii = 0; ii < kernel.rows; ii++) {
+				for (int jj = 0; jj < kernel.cols; jj++) {
+					if (kernel.at<uchar>(ii, jj)) {
+						iVal = src.at<uchar>(i + ii, j + jj);
+						if (iMax < iVal) {
+							iMax = iVal;
+						}
 					}
 				}
 			}
+			dst.at<uchar>(i + 1, j + 1) = iMax;
 		}
 	}
 }
+
 
 
 void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp)
