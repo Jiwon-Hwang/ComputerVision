@@ -976,9 +976,9 @@ void LabelComponent(unsigned short* STACK, unsigned short width, unsigned short 
 START: /* Recursive routine starts here */
 
 	//index = X + width * Y; // 2차원 배열의 인덱스를 1차원처럼 늘려서 계산한 것!
-	if (input.at<uchar>(y, x) == 0) RETURN;   /* This pixel is not part of a component */
-	if (output.at<uchar>(y, x) != 0) RETURN;   /* This pixel has already been labelled  */
-	output.at<uchar>(y, x) = labelNo;
+	if (input.at<uchar>(Y, X) == 0) RETURN;   /* This pixel is not part of a component */
+	if (output.at<uchar>(Y, X) != 0) RETURN;   /* This pixel has already been labelled  */
+	output.at<uchar>(Y, X) = labelNo;
 
 	if (X > 0) CALL_LabelComponent(X - 1, Y, 1);   /* left  pixel */
 RETURN1:
