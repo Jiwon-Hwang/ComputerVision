@@ -13,13 +13,18 @@ using namespace std;
 #ifdef _DEBUG
 #define new DEBUG_NEW
 
+#define E_loop 5 //Erosion loop
+#define D_loop 5 //Dilation loop
+
 #define FOREWARD 1
 #define BACKWARD 2
 
 #endif
 void changeColor(Mat img, Mat &copy, int i);
 void cvtToGray(Mat img, Mat& img_gray, int nRows, int nCols);
-void Otsu(Mat& img_copy);
+void Otsu(Mat& img_copy, int nRows, int nCols);
+void Erosion(Mat& img_copy, int nRows, int nCols);
+void Dilation(Mat& img_copy, int nRows, int nCols);
 void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp);
 
 void read_neighbor8(int y, int x, int neighbor8[], Mat& bImage);
@@ -258,24 +263,28 @@ void CRGBDlg::OnBnClickedImgSave()
 	
 	//중간 과제
 
+	//명암 영상 생성
 	int nRows = img.rows;
 	int nCols = img.cols;
 	Mat img_copy(nRows, nCols, CV_8UC1); // Mat img(rows, cols, type)
 	cvtToGray(img, img_copy, nRows, nCols); // cvtColor(img, img_copy, CV_BGR2GRAY);
 	imwrite("gray.jpg", img_copy); 
 
-	//Otsu(img_copy); //Otsu(&img)
-	//imwrite("Otsu.jpg", img_copy);
+	//이진화
+	Otsu(img_copy, nRows, nCols);
+	imwrite("Otsu.jpg", img_copy);
 
-	///* 픽셀값 찍어보기 ==> 0(검은색, 대상)과 255(흰색, 배경)
-	//for (int i = 0; i < 300; i++) {
-	//	for (int j = 0; j < 300; j++) {
-	//		printf("%d",img_copy.at<uchar>(i, j));
-	//	}
-	//	printf("\n");
-	//}
-	//*/
-	//
+	//형태학적 연산
+	Mat opening = img_copy.clone();
+	Erosion(opening, nRows, nCols);
+	Dilation(opening, nRows, nCols);
+	imwrite("opening.jpg", opening);
+
+	Mat closing = img_copy.clone();;
+	Dilation(closing, nRows, nCols);
+	Erosion(closing, nRows, nCols);
+	imwrite("closing.jpg", closing);
+	
 
 	//Mat element5(5, 5, CV_8U, Scalar(1));
 
@@ -613,10 +622,8 @@ void cvtToGray(Mat img, Mat &img_gray, int nRows, int nCols) {
 }
 
 
-void Otsu(Mat &img_copy)
+void Otsu(Mat &img_copy, int nRows, int nCols)
 {
-	int nRows = img_copy.rows;
-	int nCols = img_copy.cols;
 	Mat histogram;
 	const int* channel_numbers = { 0 };
 	float channel_range[] = { 0.0, 255.0 };
@@ -664,6 +671,49 @@ void Otsu(Mat &img_copy)
 	//DisplayImage(binary, 3);
 	img_copy = binary.clone();
 }
+
+void Erosion(Mat &img_copy, int nRows, int nCols) {
+	//tmp 정의, 초기화
+	Mat tmp(nRows, nCols, CV_8UC1, Scalar(0)); //Mat 객체 0으로 초기화, 크기 지정
+	
+	for (int i = 0; i < E_loop; i++) {
+		for (int h = 0; h < nRows; h++) {
+			for (int w = 0; w < nCols; w++) {
+				tmp.at<uchar>(h, w) = img_copy.at<uchar>(h, w);
+			}
+		}
+		for (int h = 1; h < nRows - 1; h++) {
+			for (int w = 1; w < nCols - 1; w++) {
+				if (img_copy.at<uchar>(h, w) != 0) {
+					if (tmp.at<uchar>(h-1, w-1) == 0 || tmp.at<uchar>(h, w - 1) == 0 || tmp.at<uchar>(h + 1, w - 1) == 0 ||
+						tmp.at<uchar>(h - 1, w) == 0 || tmp.at<uchar>(h + 1, w) == 0 ||
+						tmp.at<uchar>(h - 1, w + 1) == 0 || tmp.at<uchar>(h + 1, w + 1) == 0) {
+						tmp.at<uchar>(h, w) = 0;
+					}
+				}
+			}
+		}
+	}
+}
+
+void Dilation(Mat& img_copy, int nRows, int nCols) {
+	for (int i = 0; i < D_loop; i++) {
+		//tmp 정의, 초기화
+		Mat tmp = img_copy.clone(); // 깊은 복사 (각각 다른 메모리 참조)
+		for (int h = 1; h < nRows - 1; h++) {
+			for (int w = 1; w < nCols - 1; w++) {
+				if (img_copy.at<uchar>(h, w) == 0) {
+					if (tmp.at<uchar>(h-1, w-1) != 0 || tmp.at<uchar>(h, w-1) != 0 || tmp.at<uchar>(h+1, w-1) != 0 ||
+						tmp.at<uchar>(h-1, w) != 0 || tmp.at<uchar>(h+1, w) != 0 ||
+						tmp.at<uchar>(h-1, w+1) != 0 || tmp.at<uchar>(h+1, w+1) != 0) {
+						tmp.at<uchar>(h, w) = 255;
+					}
+				}
+			}
+		}
+	}
+}
+
 
 void ContourTracing(Mat &imgSrc, int sx, int sy, vector<Point>& cp)
 {
